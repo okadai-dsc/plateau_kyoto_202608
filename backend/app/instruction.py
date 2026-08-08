@@ -17,29 +17,45 @@ RELATIVE: dict[int, str] = {
 }
 
 
-def build_start_hint(
-    landmark_name: str | None,
-    bearing: Bearing | None,
-    distance: float | None = None,
-    min_distance: float = 0,
-) -> str:
+def build_start_hint(cue: dict | None) -> str:
     """出発地点での方角の手がかり。
 
     目印は経路を選ぶためではなく、**どちらが上ルかを知るため**にある。
-    目印を正面に見たとき上ルがどちらに当たるかを言えば、
-    方位を意識しなくても四方向が決まる（docs/SPEC.md 2.1）。
+    精度が高い順に4層あり、最後の「街区の形」はどこでも使える（docs/SPEC.md 2.4）。
     """
-    if landmark_name is None:
-        return "目印が見えません。通り名の標識で方角を確かめてください。"
+    if not cue:
+        return "通り名の標識で方角を確かめてください。"
 
-    # 近すぎると見上げる形になり、水平方向が読みにくい
-    if bearing is None or (distance is not None and distance < min_distance):
-        return f"{landmark_name}はすぐそこです。見上げる位置なので方角の目印には使えません。"
+    kind = cue.get("kind")
+
+    if kind == "block":
+        # 方角そのものは分からないが、南北か東西かは街区の形で分かる。
+        # 京都の街区は東西に長いので、次の交差点までの距離が倍ちがう。
+        ns = cue.get("ns_spacing", 0)
+        ew = cue.get("ew_spacing", 0)
+        return (
+            f"目印は見えません。次の交差点まで"
+            f"およそ{ns}mなら東西、およそ{ew}mなら南北に歩いています。"
+            "通り名の標識で確かめてください。"
+        )
+
+    # 稜線は「山の稜線」という名前をそのまま文に入れると硬いので短くする
+    name = "山" if kind == "skyline" else (cue.get("name") or "目印")
+    bearing = cue.get("bearing")
+
+    if bearing is None:
+        return f"{name}はすぐそこです。見上げる位置なので方角の目印には使えません。"
 
     relative = RELATIVE[(0 - DIRECTIONS.index(bearing) * 45) % 360]
-    if relative == "正面":
-        return f"{landmark_name}が{bearing}に見えます。{landmark_name}の方が上ルです。"
-    return f"{landmark_name}が{bearing}に見えます。{landmark_name}を正面に見て、{relative}が上ルです。"
+    facing = f"{name}の方が上ルです。" if relative == "正面" else f"{name}を正面に見て、{relative}が上ルです。"
+
+    if kind == "skyline":
+        walk = int(cue.get("walk", 0))
+        if walk > 0:
+            return f"{bearing}へ{walk}mほど歩くと山が見えます。{facing}"
+        return f"{bearing}に山が見えます。{facing}"
+
+    return f"{name}が{bearing}に見えます。{facing}"
 
 
 def build_move_instruction(direction: str, count: int, to_street_name: str) -> str:

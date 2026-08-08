@@ -14,23 +14,50 @@ def test_move_instruction_always_uses_the_kyoto_direction_words():
         assert direction in build_move_instruction(direction, 1, "四条通")
 
 
-def test_start_hint_tells_which_way_is_agaru_from_the_landmark():
+def point(bearing, distance=2000):
+    return {"kind": "point", "name": "京都タワー", "layer": 1,
+            "bearing": bearing, "distance": distance}
+
+
+def test_point_landmark_tells_which_way_is_agaru():
     """目印は経路選択ではなく、どちらが上ルかを知るためにある。"""
-    assert build_start_hint("京都タワー", "南", 2000, 200) == (
+    assert build_start_hint(point("南")) == (
         "京都タワーが南に見えます。京都タワーを正面に見て、真後ろが上ルです。")
-    assert build_start_hint("京都タワー", "西", 2000, 200) == (
+    assert build_start_hint(point("西")) == (
         "京都タワーが西に見えます。京都タワーを正面に見て、右手が上ルです。")
-    assert build_start_hint("大文字", "北東", 3000, 0) == (
-        "大文字が北東に見えます。大文字を正面に見て、左前が上ルです。")
-    assert build_start_hint("大文字", "北", 3000, 0) == (
-        "大文字が北に見えます。大文字の方が上ルです。")
+    assert build_start_hint(point("北")) == (
+        "京都タワーが北に見えます。京都タワーの方が上ルです。")
 
 
-def test_start_hint_refuses_to_use_a_landmark_that_is_too_close():
+def test_point_landmark_that_is_too_close_gives_no_bearing():
     """近すぎると見上げる形になり、水平方向が読みにくい。"""
-    hint = build_start_hint("京都タワー", "南", 80, 200)
+    hint = build_start_hint(point(None, distance=80))
     assert "すぐそこ" in hint and "見上げる" in hint
 
 
-def test_start_hint_falls_back_to_street_signs_when_nothing_is_visible():
-    assert "通り名" in build_start_hint(None, None)
+def test_skyline_says_where_the_mountains_are():
+    at_hand = {"kind": "skyline", "name": "山の稜線", "layer": 3,
+               "bearing": "東", "walk": 0}
+    # 東を向けば北は左手
+    assert build_start_hint(at_hand) == "東に山が見えます。山を正面に見て、左手が上ルです。"
+
+    after_walking = {"kind": "skyline", "name": "山の稜線", "layer": 3,
+                     "bearing": "北東", "walk": 40}
+    hint = build_start_hint(after_walking)
+    assert "北東へ40mほど歩くと山が見えます" in hint
+    assert "左前が上ル" in hint
+
+
+def test_block_shape_is_the_last_resort_and_works_anywhere():
+    """何も見えなくても、街区の形なら南北か東西かは分かる。
+
+    京都の街区は東西に長いので、次の交差点までの距離が倍ちがう。
+    """
+    hint = build_start_hint({"kind": "block", "name": "街区の形", "layer": 4,
+                             "bearing": None, "ns_spacing": 72, "ew_spacing": 136})
+    assert "72m" in hint and "東西" in hint
+    assert "136m" in hint and "南北" in hint
+
+
+def test_nothing_at_all_falls_back_to_street_signs():
+    assert "通り名" in build_start_hint(None)

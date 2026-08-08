@@ -18,8 +18,9 @@ class Landmark:
         self.id = str(raw["id"])
         self.name = str(raw["name"])
         self.layer = int(raw["layer"])
-        self.x = float(raw["x"])            # 川端通から西へ(m)
-        self.y = float(raw["y"])            # 今出川通から南へ(m)
+        self.kind = str(raw.get("kind", "point"))
+        self.x = float(raw.get("x", 0))     # 最も東の通りから西へ(m)
+        self.y = float(raw.get("y", 0))     # 最も北の通りから南へ(m)
         self.min_distance = float(raw.get("min_distance", 0))
 
 
@@ -38,8 +39,10 @@ class LandmarkService:
         self.landmarks = sorted(
             (Landmark(raw) for raw in grid.landmarks), key=lambda item: item.layer
         )
-        for matrix in self._visible.values():
-            self.grid._validate_matrix(matrix, "visible")
+        # 行列で持つのは点の目印だけ。稜線は交差点ごとの辞書で持つ
+        for key, matrix in self._visible.items():
+            if isinstance(matrix, list):
+                self.grid._validate_matrix(matrix, f"visible[{key}]")
 
     # ── 可視判定 ────────────────────────────────────────────
 
@@ -49,6 +52,14 @@ class LandmarkService:
         if matrix is None:
             return False
         return bool(matrix[ew_index][ns_index])
+
+    def skyline(self, ns_index: int, ew_index: int) -> dict[str, int]:
+        """その交差点から見える山の稜線。{方角: 何m歩けば見えるか}"""
+        self.grid.validate_indices(ns_index, ew_index)
+        data = self._visible.get("skyline")
+        if not isinstance(data, dict):
+            return {}
+        return data.get(f"{ns_index},{ew_index}", {})
 
     # ── 方位と距離 ──────────────────────────────────────────
 
@@ -67,24 +78,47 @@ class LandmarkService:
         angle = math.degrees(math.atan2(-dx, -dy)) % 360   # 北=0、東=90
         return DIRECTIONS[round(angle / 45) % 8], distance
 
-    def best(
-        self,
-        ns_index: int,
-        ew_index: int,
-    ) -> tuple[Landmark | None, Bearing | None, float | None]:
-        """その交差点から見える、いちばん精度の高い目印。
+    def best(self, ns_index: int, ew_index: int) -> dict[str, Any]:
+        """その交差点で使える、いちばん精度の高い方角の手がかり。
 
-        近すぎる目印は見上げる形になり水平方向が読みにくいので、
-        見えていても方位は返さない（bearing が None になる）。
+        精度が高い順に4層。最後の「街区の形」はどこでも使えるので、
+        必ず何かは返る（docs/SPEC.md 2.4）。
         """
         for landmark in self.landmarks:
-            if not self.visible(landmark.id, ns_index, ew_index):
-                continue
-            bearing, distance = self.bearing_and_distance(landmark, ns_index, ew_index)
-            if distance < landmark.min_distance:
-                return landmark, None, distance
-            return landmark, bearing, distance
-        return None, None, None
+            if landmark.kind == "point":
+                if not self.visible(landmark.id, ns_index, ew_index):
+                    continue
+                bearing, distance = self.bearing_and_distance(landmark, ns_index, ew_index)
+                # 近すぎると見上げる形になり、水平方向が読みにくい
+                too_close = distance < landmark.min_distance
+                return {
+                    "kind": "point", "id": landmark.id, "name": landmark.name,
+                    "layer": landmark.layer,
+                    "bearing": None if too_close else bearing,
+                    "distance": round(distance),
+                }
+
+            if landmark.kind == "skyline":
+                seen = self.skyline(ns_index, ew_index)
+                if not seen:
+                    continue
+                # いちばん近くで見える方角を選ぶ（0m = その場で見える）
+                bearing, walk = min(seen.items(), key=lambda item: (item[1], item[0]))
+                return {
+                    "kind": "skyline", "id": landmark.id, "name": landmark.name,
+                    "layer": landmark.layer, "bearing": bearing,
+                    "walk": int(walk), "directions": dict(seen),
+                }
+
+            if landmark.kind == "block":
+                block = self.grid.block
+                return {
+                    "kind": "block", "id": landmark.id, "name": landmark.name,
+                    "layer": landmark.layer, "bearing": None,
+                    "ns_spacing": int(block.get("ns_spacing", 0)),
+                    "ew_spacing": int(block.get("ew_spacing", 0)),
+                }
+        return {"kind": "none", "layer": 99, "bearing": None}
 
     def _read_visible(self) -> dict[str, list[list[bool]]]:
         with (self.data_dir / "visible.json").open(encoding="utf-8") as file:

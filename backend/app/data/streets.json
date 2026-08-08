@@ -11,217 +11,210 @@
       "index": 1,
       "name": "河原町通",
       "major": true,
-      "pos": 120,
+      "pos": 302,
       "width": 22
     },
     {
       "index": 2,
       "name": "寺町通",
       "major": true,
-      "pos": 240,
+      "pos": 465,
       "width": 8
     },
     {
       "index": 3,
       "name": "御幸町通",
       "major": false,
-      "pos": 300,
+      "pos": 526,
       "width": 5
     },
     {
       "index": 4,
       "name": "麩屋町通",
       "major": false,
-      "pos": 360,
+      "pos": 593,
       "width": 5
     },
     {
       "index": 5,
       "name": "富小路通",
       "major": false,
-      "pos": 420,
+      "pos": 660,
       "width": 5
     },
     {
       "index": 6,
       "name": "柳馬場通",
       "major": false,
-      "pos": 480,
+      "pos": 746,
       "width": 5
     },
     {
       "index": 7,
       "name": "堺町通",
       "major": false,
-      "pos": 540,
+      "pos": 812,
       "width": 5
     },
     {
       "index": 8,
       "name": "高倉通",
       "major": false,
-      "pos": 600,
+      "pos": 874,
       "width": 8
     },
     {
       "index": 9,
       "name": "間之町通",
       "major": false,
-      "pos": 660,
+      "pos": 950,
       "width": 4
     },
     {
       "index": 10,
       "name": "東洞院通",
       "major": false,
-      "pos": 720,
+      "pos": 1012,
       "width": 8
     },
     {
       "index": 11,
       "name": "車屋町通",
       "major": false,
-      "pos": 780,
+      "pos": 1090,
       "width": 4
     },
     {
       "index": 12,
       "name": "烏丸通",
       "major": true,
-      "pos": 840,
+      "pos": 1137,
       "width": 25
     },
     {
       "index": 13,
       "name": "両替町通",
       "major": false,
-      "pos": 900,
+      "pos": 1220,
       "width": 4
     },
     {
       "index": 14,
       "name": "室町通",
       "major": false,
-      "pos": 960,
+      "pos": 1283,
       "width": 6
     },
     {
       "index": 15,
       "name": "衣棚通",
       "major": false,
-      "pos": 1020,
+      "pos": 1361,
       "width": 4
     },
     {
       "index": 16,
       "name": "新町通",
       "major": false,
-      "pos": 1080,
+      "pos": 1414,
       "width": 8
     },
     {
       "index": 17,
       "name": "釜座通",
       "major": false,
-      "pos": 1140,
+      "pos": 1491,
       "width": 4
     },
     {
       "index": 18,
       "name": "西洞院通",
       "major": false,
-      "pos": 1200,
+      "pos": 1550,
       "width": 12
     },
     {
       "index": 19,
       "name": "小川通",
       "major": false,
-      "pos": 1260,
+      "pos": 1635,
       "width": 4
     },
     {
       "index": 20,
       "name": "油小路通",
       "major": false,
-      "pos": 1320,
+      "pos": 1689,
       "width": 8
     },
     {
       "index": 21,
       "name": "醒ヶ井通",
       "major": false,
-      "pos": 1380,
+      "pos": 1772,
       "width": 4
     },
     {
       "index": 22,
       "name": "堀川通",
       "major": true,
-      "pos": 1440,
+      "pos": 1844,
       "width": 50
     },
     {
       "index": 23,
-      "name": "葭屋町通",
+      "name": "猪熊通",
       "major": false,
-      "pos": 1500,
-      "width": 4
+      "pos": 1975,
+      "width": 5
     },
     {
       "index": 24,
-      "name": "猪熊通",
+      "name": "黒門通",
       "major": false,
-      "pos": 1560,
+      "pos": 2045,
       "width": 5
     },
     {
       "index": 25,
-      "name": "黒門通",
-      "major": false,
-      "pos": 1620,
-      "width": 5
-    },
-    {
-      "index": 26,
       "name": "大宮通",
       "major": true,
-      "pos": 1680,
+      "pos": 2117,
       "width": 15
     },
     {
-      "index": 27,
+      "index": 26,
       "name": "松屋町通",
       "major": false,
-      "pos": 1740,
+      "pos": 2173,
       "width": 5
     },
     {
-      "index": 28,
+      "index": 27,
       "name": "日暮通",
       "major": false,
-      "pos": 1800,
+      "pos": 2226,
       "width": 4
     },
     {
-      "index": 29,
+      "index": 28,
       "name": "智恵光院通",
       "major": false,
-      "pos": 1860,
+      "pos": 2340,
       "width": 8
     },
     {
-      "index": 30,
+      "index": 29,
       "name": "浄福寺通",
       "major": false,
-      "pos": 1920,
+      "pos": 2500,
       "width": 6
     },
     {
-      "index": 31,
+      "index": 30,
       "name": "千本通",
       "major": true,
-      "pos": 1980,
+      "pos": 2694,
       "width": 22
     }
   ],
@@ -237,223 +230,233 @@
       "index": 1,
       "name": "丸太町通",
       "major": true,
-      "pos": 1100,
+      "pos": 1366,
       "width": 22
     },
     {
       "index": 2,
       "name": "竹屋町通",
       "major": false,
-      "pos": 1220,
+      "pos": 1499,
       "width": 6
     },
     {
       "index": 3,
       "name": "夷川通",
       "major": false,
-      "pos": 1340,
+      "pos": 1646,
       "width": 6
     },
     {
       "index": 4,
       "name": "二条通",
       "major": true,
-      "pos": 1460,
+      "pos": 1784,
       "width": 12
     },
     {
       "index": 5,
       "name": "押小路通",
       "major": false,
-      "pos": 1580,
+      "pos": 1939,
       "width": 6
     },
     {
       "index": 6,
       "name": "御池通",
       "major": true,
-      "pos": 1700,
+      "pos": 2090,
       "width": 50
     },
     {
       "index": 7,
       "name": "姉小路通",
       "major": false,
-      "pos": 1820,
+      "pos": 2208,
       "width": 6
     },
     {
       "index": 8,
       "name": "三条通",
       "major": true,
-      "pos": 1940,
+      "pos": 2345,
       "width": 8
     },
     {
       "index": 9,
       "name": "六角通",
       "major": false,
-      "pos": 2060,
+      "pos": 2484,
       "width": 5
     },
     {
       "index": 10,
       "name": "蛸薬師通",
       "major": false,
-      "pos": 2180,
+      "pos": 2617,
       "width": 5
     },
     {
       "index": 11,
       "name": "錦小路通",
       "major": false,
-      "pos": 2300,
+      "pos": 2749,
       "width": 6
     },
     {
       "index": 12,
       "name": "四条通",
       "major": true,
-      "pos": 2420,
+      "pos": 2891,
       "width": 22
     },
     {
       "index": 13,
       "name": "綾小路通",
       "major": false,
-      "pos": 2540,
+      "pos": 3023,
       "width": 5
     },
     {
       "index": 14,
       "name": "仏光寺通",
       "major": false,
-      "pos": 2660,
+      "pos": 3153,
       "width": 5
     },
     {
       "index": 15,
       "name": "高辻通",
       "major": false,
-      "pos": 2780,
+      "pos": 3285,
       "width": 6
     },
     {
       "index": 16,
       "name": "松原通",
       "major": false,
-      "pos": 2900,
+      "pos": 3425,
       "width": 8
     },
     {
       "index": 17,
       "name": "万寿寺通",
       "major": false,
-      "pos": 3020,
+      "pos": 3559,
       "width": 5
     },
     {
       "index": 18,
       "name": "五条通",
       "major": true,
-      "pos": 3140,
+      "pos": 3724,
       "width": 50
     },
     {
       "index": 19,
       "name": "楊梅通",
       "major": false,
-      "pos": 3260,
+      "pos": 3800,
       "width": 5
     },
     {
       "index": 20,
       "name": "的場通",
       "major": false,
-      "pos": 3380,
+      "pos": 3918,
       "width": 5
     },
     {
       "index": 21,
-      "name": "魚棚通",
-      "major": false,
-      "pos": 3500,
-      "width": 5
-    },
-    {
-      "index": 22,
       "name": "六条通",
       "major": false,
-      "pos": 3620,
+      "pos": 3970,
       "width": 6
     },
     {
-      "index": 23,
+      "index": 22,
       "name": "七条通",
       "major": true,
-      "pos": 3860,
+      "pos": 4496,
       "width": 22
     },
     {
-      "index": 24,
+      "index": 23,
       "name": "塩小路通",
       "major": true,
-      "pos": 4100,
+      "pos": 4724,
+      "width": 15
+    },
+    {
+      "index": 24,
+      "name": "八条通",
+      "major": false,
+      "pos": 5044,
       "width": 15
     },
     {
       "index": 25,
-      "name": "八条通",
-      "major": false,
-      "pos": 4500,
-      "width": 15
-    },
-    {
-      "index": 26,
       "name": "九条通",
       "major": true,
-      "pos": 5000,
+      "pos": 5576,
       "width": 40
     },
     {
-      "index": 27,
+      "index": 26,
       "name": "十条通",
       "major": false,
-      "pos": 5700,
+      "pos": 6270,
       "width": 25
     }
   ],
   "tower": {
     "ns": 12,
-    "ew": 24
-  },
-  "geo": {
-    "reference": {
-      "name": "四条烏丸",
-      "ns": 12,
-      "ew": 12,
-      "lat": 35.003678,
-      "lng": 135.759637
-    }
+    "ew": 23
   },
   "landmarks": [
     {
       "id": "tower",
       "name": "京都タワー",
       "layer": 1,
-      "x": 840.0,
-      "y": 4100.0,
+      "kind": "point",
+      "x": 1137,
+      "y": 4724,
       "min_distance": 200
     },
     {
       "id": "daimonji",
       "name": "大文字",
       "layer": 2,
-      "x": -2780.0,
-      "y": 278.0,
+      "kind": "point",
+      "x": -2721,
+      "y": 300,
       "min_distance": 0
+    },
+    {
+      "id": "skyline",
+      "name": "山の稜線",
+      "layer": 3,
+      "kind": "skyline"
+    },
+    {
+      "id": "block",
+      "name": "街区の形",
+      "layer": 4,
+      "kind": "block"
     }
   ],
+  "geo": {
+    "reference": {
+      "ns": 0,
+      "ew": 0,
+      "lat": 35.0296957,
+      "lng": 135.7721695
+    }
+  },
+  "block": {
+    "ns_spacing": 72,
+    "ew_spacing": 136
+  },
   "spots": [
     {
       "name": "京都御苑",
@@ -477,7 +480,7 @@
       "area": {
         "ns": [
           22,
-          26
+          25
         ],
         "ew": [
           2,
@@ -523,60 +526,45 @@
     {
       "name": "東本願寺",
       "ns": 12,
-      "ew": 23,
+      "ew": 22,
       "area": {
         "ns": [
           10,
           12
         ],
         "ew": [
-          22,
-          23
+          21,
+          22
         ]
       }
     },
     {
       "name": "西本願寺",
       "ns": 22,
-      "ew": 23,
+      "ew": 22,
       "area": {
         "ns": [
           22,
-          26
+          25
         ],
         "ew": [
-          22,
-          23
+          21,
+          22
         ]
       }
     },
     {
       "name": "京都駅",
       "ns": 12,
-      "ew": 25,
+      "ew": 24,
       "area": {
         "ns": [
           10,
           18
         ],
         "ew": [
-          24,
-          25
-        ]
-      }
-    },
-    {
-      "name": "東寺",
-      "ns": 26,
-      "ew": 26,
-      "area": {
-        "ns": [
-          26,
-          31
-        ],
-        "ew": [
-          25,
-          26
+          23,
+          24
         ]
       }
     }

@@ -56,29 +56,34 @@ def test_visible_reads_the_matrix_for_each_landmark(tmp_path):
     assert not service.visible("unknown", 1, 0)
 
 
-def test_best_skips_a_landmark_that_cannot_be_seen(tmp_path):
+def test_best_returns_the_most_precise_visible_cue(tmp_path):
     visible = [[False, False], [False, True]]
     service = make(tmp_path, ns_count=2, ew_count=2, tower=(1, 1), visible=visible)
 
-    landmark, bearing, distance = service.best(0, 0)
-    assert landmark is None and bearing is None and distance is None
+    cue = service.best(1, 1)
+    assert cue["kind"] == "point" and cue["id"] == "tower" and cue["layer"] == 1
 
-    landmark, bearing, _ = service.best(1, 1)
-    assert landmark is not None and landmark.id == "tower"
+
+def test_best_falls_through_when_the_landmark_is_not_visible(tmp_path):
+    """見えない目印は飛ばす。テスト用データには下位の層が無いので何も返らない。"""
+    visible = [[False, False], [False, True]]
+    service = make(tmp_path, ns_count=2, ew_count=2, tower=(1, 1), visible=visible)
+
+    assert service.best(0, 0)["kind"] == "none"
 
 
 def test_best_withholds_the_bearing_when_the_landmark_is_too_close(tmp_path):
     """近すぎると見上げる形になり、水平方向の目印にならない。"""
-    write_grid_data(tmp_path, ns_count=3, ew_count=3, tower=(1, 1))
     import json
+    write_grid_data(tmp_path, ns_count=3, ew_count=3, tower=(1, 1))
     path = tmp_path / "streets.json"
     data = json.loads(path.read_text(encoding="utf-8"))
     data["landmarks"][0]["min_distance"] = 500      # 120m 間隔なので隣は近すぎ扱い
     path.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
 
     service = LandmarkService(Grid(tmp_path), tmp_path)
-    landmark, bearing, distance = service.best(1, 0)
+    cue = service.best(1, 0)
 
-    assert landmark is not None
-    assert bearing is None          # 見えてはいるが方位には使わせない
-    assert distance == 120
+    assert cue["kind"] == "point"
+    assert cue["bearing"] is None          # 見えてはいるが方位には使わせない
+    assert cue["distance"] == 120
