@@ -30,3 +30,6 @@ Thumbs.db
 .vscode/
 .idea/
 .vercel
+
+# Vercel のビルド生成物。npm run build が frontend/ からコピーして作る
+public/
