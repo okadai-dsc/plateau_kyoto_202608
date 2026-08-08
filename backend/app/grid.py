@@ -27,6 +27,7 @@ class Grid:
             "ns": int(streets_data["tower"]["ns"]),
             "ew": int(streets_data["tower"]["ew"]),
         }
+        self._spots: list[dict[str, Any]] = streets_data.get("spots", [])
 
         self._validate_streets()
         self._validate_matrix(self._exists, "exists")
@@ -48,12 +49,31 @@ class Grid:
     def tower_indices(self) -> tuple[int, int]:
         return self._tower_indices["ns"], self._tower_indices["ew"]
 
+    @property
+    def spots(self) -> list[dict[str, Any]]:
+        """グリッド上に表示する観光地（docs/API.md 3.1）。表示専用。"""
+        payload = []
+        for spot in self._spots:
+            entry: dict[str, Any] = {
+                "name": spot["name"],
+                "at": self.intersection_from_indices(int(spot["ns"]), int(spot["ew"])),
+            }
+            area = spot.get("area")
+            if area:
+                entry["area"] = {
+                    "ns": [self.street_id("ns", int(i)) for i in area["ns"]],
+                    "ew": [self.street_id("ew", int(i)) for i in area["ew"]],
+                }
+            payload.append(entry)
+        return payload
+
     def to_response(self) -> dict[str, Any]:
         return {
             "ns_streets": self.ns_streets,
             "ew_streets": self.ew_streets,
             "exists": self.exists_matrix,
             "tower": self.intersection_from_indices(*self.tower_indices),
+            "spots": self.spots,
         }
 
     def street_id(self, axis: Axis, index: int) -> str:
@@ -115,6 +135,10 @@ class Grid:
                 "axis": axis,
                 "index": int(street["index"]),
                 "name": str(street["name"]),
+                # 以下は表示専用。経路計算には使わない（docs/API.md 2.1）
+                "major": bool(street.get("major", False)),
+                "pos": int(street.get("pos", 0)),      # 基準の通りからの距離(m)
+                "width": int(street.get("width", 0)),  # 通りの幅(m)
             }
             for street in sorted(raw_streets, key=lambda item: int(item["index"]))
         ]

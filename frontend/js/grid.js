@@ -22,6 +22,21 @@ const GridView = (() => {
     const towerNs = grid.tower ? Api.indexOf(grid.tower.ns) : null;
     const towerEw = grid.tower ? Api.indexOf(grid.tower.ew) : null;
 
+    // ── 観光地。敷地の広がりを淡く示し、代表する交差点に印を置く ──
+    const spots = grid.spots ?? [];
+    const spotAt = new Map();       // "ns:ew" -> 観光地名
+    const inSpotArea = new Set();   // 敷地に含まれる "ns:ew"
+
+    for (const spot of spots) {
+      spotAt.set(`${Api.indexOf(spot.at.ns)}:${Api.indexOf(spot.at.ew)}`, spot.name);
+      if (!spot.area) continue;
+      const [nsFrom, nsTo] = spot.area.ns.map(Api.indexOf);
+      const [ewFrom, ewTo] = spot.area.ew.map(Api.indexOf);
+      for (let ew = ewFrom; ew <= ewTo; ew += 1) {
+        for (let ns = nsFrom; ns <= nsTo; ns += 1) inSpotArea.add(`${ns}:${ew}`);
+      }
+    }
+
     let selected = null;   // {nsIndex, ewIndex}
     let current = null;    // {nsIndex, ewIndex}
     const cellByKey = new Map();
@@ -35,9 +50,57 @@ const GridView = (() => {
       ew: grid.ew_streets[ewIndex].id,
     });
 
+    // ── 実寸から見た目を決める（表示専用・docs/API.md 2.1） ──
+    //
+    // 通りの間隔（街区の大きさ）でマスの大きさを、
+    // 通りの幅で罫線の太さを決める。実際の京都の比率に近づけるため。
+    // 平方根で圧縮しないと、御所の南北（約1.1km）が街区（約120m）の9倍になり
+    // 画面に収まらない。
+    const GAP_MIN = 22, GAP_MAX = 80, GAP_SCALE = 3.0;
+    const LINE_MIN = 1, LINE_MAX = 8, LINE_SCALE = 1 / 6;
+
+    const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+
+    const DEFAULT_GAP = 120;   // 平安京の1町ぶん。pos を持たないデータのときに使う
+
+    /** 次の通りまでの距離(m) から、マスの大きさ(px) を出す */
+    function cellSize(streets, index) {
+      const here = streets[index];
+      const next = streets[index + 1];
+      // 最後の1本は次が無いので、ひとつ手前の間隔を流用する
+      const gap = next
+        ? next.pos - here.pos
+        : (index > 0 ? here.pos - streets[index - 1].pos : DEFAULT_GAP);
+      const meters = Number.isFinite(gap) && gap > 0 ? gap : DEFAULT_GAP;
+      return Math.round(clamp(GAP_SCALE * Math.sqrt(meters), GAP_MIN, GAP_MAX));
+    }
+
+    /** 通りの幅(m) から、罫線の太さ(px) を出す */
+    const lineWeight = (street) =>
+      Math.round(clamp((street.width ?? 0) * LINE_SCALE, LINE_MIN, LINE_MAX));
+
+    const nsSize = grid.ns_streets.map((_, i) => cellSize(grid.ns_streets, i));
+    const ewSize = grid.ew_streets.map((_, i) => cellSize(grid.ew_streets, i));
+
+    // 幅の広い通りほど濃い線にする
+    const lineColor = (street) =>
+      (street.width ?? 0) >= 12 ? 'var(--major-line)' : 'var(--line)';
+
     // ── 表の組み立て。本数はデータから取る（ハードコードしない） ──
     const table = document.createElement('table');
     table.className = 'grid';
+
+    // 列幅は colgroup でまとめて指定する
+    const colgroup = document.createElement('colgroup');
+    const headCol = document.createElement('col');
+    headCol.className = 'grid-col-head';
+    colgroup.appendChild(headCol);
+    for (const street of grid.ns_streets) {
+      const col = document.createElement('col');
+      col.style.width = `${nsSize[street.index]}px`;
+      colgroup.appendChild(col);
+    }
+    table.appendChild(colgroup);
 
     const thead = document.createElement('thead');
     const headRow = document.createElement('tr');
@@ -49,6 +112,8 @@ const GridView = (() => {
     for (const street of grid.ns_streets) {
       const th = document.createElement('th');
       th.className = 'grid-head-col';
+      // 主要な通りを強調して、実際の京都の街の見え方に近づける
+      if (street.major) th.classList.add('is-major');
       th.setAttribute('scope', 'col');
       th.textContent = street.name;
       headRow.appendChild(th);
@@ -61,9 +126,11 @@ const GridView = (() => {
     for (const ewStreet of grid.ew_streets) {
       const ewIndex = ewStreet.index;
       const tr = document.createElement('tr');
+      tr.style.height = `${ewSize[ewIndex]}px`;
 
       const rowHead = document.createElement('th');
       rowHead.className = 'grid-head-row';
+      if (ewStreet.major) rowHead.classList.add('is-major');
       rowHead.setAttribute('scope', 'row');
       rowHead.textContent = ewStreet.name;
       tr.appendChild(rowHead);
@@ -72,7 +139,16 @@ const GridView = (() => {
         const nsIndex = nsStreet.index;
         const td = document.createElement('td');
         td.className = 'grid-cell';
-        const label = `${nsStreet.name} × ${ewStreet.name}`;
+        // 罫線の太さを通りの実際の幅に合わせる（御池通・堀川通は太く、小路は細く）
+        td.style.boxShadow =
+          `inset ${lineWeight(nsStreet)}px 0 0 ${lineColor(nsStreet)}, ` +
+          `inset 0 ${lineWeight(ewStreet)}px 0 ${lineColor(ewStreet)}`;
+        if (inSpotArea.has(key(nsIndex, ewIndex))) td.classList.add('is-spot-area');
+
+        const spotName = spotAt.get(key(nsIndex, ewIndex));
+        const label = spotName
+          ? `${nsStreet.name} × ${ewStreet.name}（${spotName}）`
+          : `${nsStreet.name} × ${ewStreet.name}`;
 
         if (!exists(nsIndex, ewIndex)) {
           // 存在しない交差点。押せないことが見て分かるようにする
@@ -91,11 +167,16 @@ const GridView = (() => {
 
         // 現在地や目的地の表示を外したときに戻す既定の見た目
         const isTower = towerNs === nsIndex && towerEw === ewIndex;
-        button.dataset.baseText = isTower ? '塔' : '';
+        button.dataset.baseText = isTower ? '塔' : (spotName ? '◉' : '');
+        button.title = label;
         if (isTower) {
           button.classList.add('is-tower');
           button.setAttribute('aria-label', `${label}（京都タワー）`);
         } else {
+          if (spotName) {
+            button.classList.add('is-spot');
+            button.dataset.spot = spotName;
+          }
           button.setAttribute('aria-label', label);
         }
         button.textContent = button.dataset.baseText;
@@ -120,6 +201,7 @@ const GridView = (() => {
       <li><span class="legend-swatch is-current">今</span>現在地</li>
       <li><span class="legend-swatch is-selected">★</span>目的地</li>
       <li><span class="legend-swatch is-tower">塔</span>京都タワー</li>
+      <li><span class="legend-swatch is-spot">◉</span>観光地</li>
       <li><span class="legend-swatch is-absent"></span>交差点なし</li>
     `;
 
@@ -134,8 +216,7 @@ const GridView = (() => {
       button.classList.remove('is-current', 'is-selected');
       button.disabled = false;
       button.textContent = button.dataset.baseText;
-      button.setAttribute('aria-label',
-        button.dataset.label + (button.dataset.baseText ? '（京都タワー）' : ''));
+      button.setAttribute('aria-label', button.dataset.label);
     }
 
     function clearDestination(notify = true) {
@@ -197,8 +278,28 @@ const GridView = (() => {
       scroll.scrollTop += (target.top - container.top) - (container.height - target.height) / 2;
     }
 
+    /** 観光地チップなど、グリッド外から目的地を指定する */
+    function selectAt(intersection) {
+      const position = {
+        nsIndex: Api.indexOf(intersection.ns),
+        ewIndex: Api.indexOf(intersection.ew),
+      };
+      if (!cellAt(position)) return;
+      selectDestination(position);
+      scrollIntoGrid(cellAt(position));
+    }
+
+    /** その交差点にある観光地名（無ければ null） */
+    function spotNameAt(intersection) {
+      if (!intersection) return null;
+      const k = key(Api.indexOf(intersection.ns), Api.indexOf(intersection.ew));
+      return spotAt.get(k) ?? null;
+    }
+
     return {
       setCurrent,
+      selectAt,
+      spotNameAt,
       clearDestination,
       getSelected: () => (selected ? toIntersection(selected) : null),
     };

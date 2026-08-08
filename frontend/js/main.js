@@ -63,13 +63,54 @@ const App = (() => {
       },
     });
 
+    renderSpotChips();
     updateSummary();
     $('#btn-go').addEventListener('click', requestRoute);
   }
 
+  /**
+   * 観光地から目的地を選べるようにする。
+   *
+   * 観光客が行きたいのは「三条 × 河原町」ではなく「錦市場」なので、
+   * 通り名を知らなくても目的地を指定できる入口を用意する（docs/SPEC.md 4.5.3）。
+   */
+  function renderSpotChips() {
+    const container = $('#spot-chips');
+    const spots = state.grid.spots ?? [];
+    container.innerHTML = '';
+    container.hidden = spots.length === 0;
+    if (!spots.length) return;
+
+    for (const spot of spots) {
+      const chip = document.createElement('button');
+      chip.type = 'button';
+      chip.className = 'spot-chip';
+      chip.textContent = spot.name;
+      chip.title = intersectionLabel(spot.at);
+      chip.addEventListener('click', () => {
+        state.gridView.selectAt(spot.at);
+        highlightChip(spot.name);
+      });
+      container.appendChild(chip);
+    }
+  }
+
+  function highlightChip(name) {
+    for (const chip of document.querySelectorAll('.spot-chip')) {
+      chip.classList.toggle('is-active', chip.textContent === name);
+    }
+  }
+
   function updateSummary() {
     $('#summary-current').textContent = intersectionLabel(state.from);
-    $('#summary-destination').textContent = intersectionLabel(state.to);
+
+    // 観光地が選ばれていれば、その名前を添える
+    const spotName = state.to ? state.gridView.spotNameAt(state.to) : null;
+    $('#summary-destination').textContent = state.to
+      ? (spotName ? `${spotName}（${intersectionLabel(state.to)}）` : intersectionLabel(state.to))
+      : '—';
+    highlightChip(spotName);
+
     $('#btn-go').disabled = !(state.from && state.to);
   }
 
