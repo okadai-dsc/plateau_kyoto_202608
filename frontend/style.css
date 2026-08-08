@@ -419,21 +419,96 @@ body.is-intro .app-main {
   max-height: min(60vh, 34rem);
   overflow: auto;
   border: 1px solid var(--line);
-  background: var(--line);
+  background: var(--surface);
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
 }
 
 .grid-map {
   display: grid;
-  grid-template-columns: repeat(var(--ns-count), minmax(0, 1fr));
-  grid-template-rows: repeat(var(--ew-count), minmax(0, 1fr));
+  /* 先頭の行・列は通り名の見出し */
+  grid-template-columns: 4.4rem repeat(var(--ns-count), minmax(0, 1fr));
+  grid-template-rows: 4.6rem repeat(var(--ew-count), minmax(0, 1fr));
   width: 100%;
   height: min(31vh, 15rem);
-  background: var(--line);
+  background: var(--surface);
   touch-action: pan-x pan-y;
   transition: width 0.18s ease, height 0.18s ease;
 }
+
+/* ── 地図の見出し（通り名） ─────────────────────────────
+ * 主役は通り名。四辺だけに書いても地図として読めないので、
+ * 全行・全列に出し、スクロールしても端に残るよう sticky にする。
+ */
+.grid-axis {
+  position: sticky;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  padding: 0 0.25rem;
+  background: var(--bg);
+  color: var(--ink-muted);
+  font-size: 0.6rem;
+  line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}
+
+.grid-axis.is-major { color: var(--ink); font-weight: 700; }
+
+.grid-axis.is-col {
+  top: 0;
+  /* 横書きだと4〜5文字が列幅に入らず隣と重なる。縦書きなら幅を食わない */
+  writing-mode: vertical-rl;
+  justify-content: flex-end;
+  padding: 0.25rem 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.grid-axis.is-row {
+  left: 0;
+  justify-content: flex-end;
+  border-right: 1px solid var(--line);
+}
+
+.grid-axis.is-corner {
+  top: 0;
+  left: 0;
+  z-index: 4;
+  grid-column: 1;
+  grid-row: 1;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+/* 拡大するほど通り名を読みやすくする */
+.grid-map[data-zoom="0"] .grid-axis { font-size: 0.5rem; }
+.grid-map[data-zoom="3"] .grid-axis { font-size: 0.72rem; }
+
+/* ── 観光地の名前 ───────────────────────────────────────
+ * 点だけでは何の観光地か分からないので、拡大したら名前を出す。
+ */
+.grid-spot-name {
+  position: absolute;
+  left: calc(50% + 0.7rem);
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;          /* 見出し(3)より下。名前が通り名を隠さないように */
+  display: none;
+  padding: 0 0.25rem;
+  border-radius: 3px;
+  background: var(--spot-soft);
+  color: var(--spot);
+  font-size: 0.58rem;
+  line-height: 1.4;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* 拡大しきったときだけ。マスが狭いうちは名前が重なって読めない */
+.grid-map[data-zoom="3"] .grid-spot-name { display: block; }
 
 /* ── 観光地 ─────────────────────────────────────────────── */
 .spot-chips {
@@ -477,7 +552,7 @@ body.is-intro .app-main {
   padding: 0;
   border: 0;
   border-radius: 0;
-  background: var(--surface);
+  background: transparent;
   box-shadow:
     inset var(--ns-line-width, 1px) 0 0 var(--ns-line, var(--line)),
     inset 0 var(--ew-line-width, 1px) 0 var(--ew-line, var(--line));
@@ -530,10 +605,13 @@ body.is-intro .app-main {
   color: var(--warn);
 }
 
+/* 現在地・目的地の印を出すときは、観光地の◉を重ねない */
+.grid-button.is-current::before,
+.grid-button.is-selected::before { content: none; }
+
 .grid-button.is-current {
+  /* セル全体を塗ると、細長いマスが黒い帯に見えてしまう。印だけにする */
   z-index: 3;
-  background: var(--ink);
-  color: var(--bg);
   opacity: 1;
   cursor: default;
 }
@@ -547,8 +625,6 @@ body.is-intro .app-main {
 
 .grid-button.is-selected {
   z-index: 3;
-  background: var(--accent);
-  color: #fff;
 }
 
 .grid-button.is-selected::after {
@@ -559,10 +635,8 @@ body.is-intro .app-main {
 }
 
 .grid-button.is-absent {
-  background:
-    repeating-linear-gradient(45deg,
-      transparent, transparent 3px,
-      var(--absent) 3px, var(--absent) 6px);
+  /* 斜線のハッチは模様として目立ちすぎ、通りより先に目に入ってしまう */
+  background: var(--absent);
   cursor: default;
   opacity: 1;
 }
