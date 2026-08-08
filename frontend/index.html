@@ -19,7 +19,7 @@
 
 <main class="app-main">
 
-  <!-- 1. 現在地と目的地を1画面で指定する（docs/FRONTEND.md 4.1 / 4.2） -->
+  <!-- 1. 現在地の入力（docs/FRONTEND.md 4.1） -->
   <section id="screen-start" class="screen" hidden>
 
     <div class="block">
@@ -28,6 +28,14 @@
       <div id="start-selector"></div>
     </div>
 
+    <div class="actions">
+      <button type="button" id="btn-start-next" class="btn btn-primary btn-block" disabled>目的地を選ぶ</button>
+    </div>
+  </section>
+
+  <!-- 2. 目的地の選択（docs/FRONTEND.md 4.2） -->
+  <section id="screen-destination" class="screen" hidden>
+
     <div class="block">
       <h2 class="screen-title">どこへ行きますか</h2>
       <p id="summary" class="summary" hidden></p>
@@ -35,8 +43,9 @@
       <div id="grid-container"></div>
     </div>
 
-    <div class="actions">
+    <div class="actions actions-stack">
       <button type="button" id="btn-go" class="btn btn-primary btn-block" disabled>この経路をつくる</button>
+      <button type="button" id="btn-destination-back" class="btn">現在地を選び直す</button>
     </div>
   </section>
 

@@ -115,6 +115,10 @@ body.is-routing .app-tagline { display: none; }
   margin: 0 auto;
 }
 
+body.is-destination .app-main {
+  max-width: min(56rem, calc(100vw - 2rem));
+}
+
 /* ── 画面共通 ───────────────────────────────────────────── */
 .screen-title {
   margin: 0 0 0.5rem;
@@ -128,7 +132,6 @@ body.is-routing .app-tagline { display: none; }
   font-size: 0.9rem;
 }
 
-/* 現在地の入力と目的地のグリッドを1画面に並べるための区切り */
 .block + .block {
   margin-top: 1.4rem;
   padding-top: 1.4rem;
@@ -250,6 +253,62 @@ body.is-routing .app-tagline { display: none; }
   background: var(--surface);
 }
 
+.grid-toolbar {
+  display: grid;
+  grid-template-columns: 2.35rem minmax(0, 1fr) 2.35rem auto auto;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0 0 0.65rem;
+}
+
+.grid-zoom-button,
+.grid-zoom-fit {
+  height: 2.25rem;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}
+
+.grid-zoom-button {
+  padding: 0;
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+.grid-zoom-fit {
+  padding: 0 0.7rem;
+  font-size: 0.82rem;
+}
+
+.grid-zoom-button:hover:not(:disabled),
+.grid-zoom-fit:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.grid-zoom-button:disabled,
+.grid-zoom-fit:disabled {
+  color: var(--ink-muted);
+  cursor: default;
+  opacity: 0.45;
+}
+
+.grid-zoom-range {
+  width: 100%;
+  accent-color: var(--accent);
+}
+
+.grid-zoom-label {
+  min-width: 2.4rem;
+  color: var(--ink-muted);
+  font-size: 0.78rem;
+  text-align: right;
+  white-space: nowrap;
+}
+
 .grid-edge-label {
   position: absolute;
   z-index: 2;
@@ -289,15 +348,24 @@ body.is-routing .app-tagline { display: none; }
   writing-mode: vertical-rl;
 }
 
+.grid-map-scroll {
+  max-height: min(60vh, 34rem);
+  overflow: auto;
+  border: 1px solid var(--line);
+  background: var(--line);
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
 .grid-map {
   display: grid;
   grid-template-columns: repeat(var(--ns-count), minmax(0, 1fr));
   grid-template-rows: repeat(var(--ew-count), minmax(0, 1fr));
   width: 100%;
   height: min(31vh, 15rem);
-  border: 1px solid var(--line);
   background: var(--line);
-  touch-action: manipulation;
+  touch-action: pan-x pan-y;
+  transition: width 0.18s ease, height 0.18s ease;
 }
 
 /* ── 観光地 ─────────────────────────────────────────────── */
@@ -653,8 +721,17 @@ body.is-routing .app-tagline { display: none; }
 /* ── 画面が狭いとき ─────────────────────────────────────── */
 @media (max-width: 380px) {
   body { padding-inline: 0.75rem; }
+  body.is-destination .app-main { max-width: calc(100vw - 1.5rem); }
   .grid-map-wrap { padding-inline: 0.8rem; }
-  .grid-map { height: 14rem; }
+  .grid-toolbar {
+    grid-template-columns: 2.2rem minmax(0, 1fr) 2.2rem auto;
+  }
+  .grid-zoom-label {
+    grid-column: 1 / -1;
+    min-width: 0;
+    text-align: center;
+  }
+  .grid-map-scroll { max-height: 52vh; }
   .selector { gap: 0.5rem; }
   .selector-cross { padding-bottom: 0.7rem; }
 }
