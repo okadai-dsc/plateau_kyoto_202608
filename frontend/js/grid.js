@@ -205,7 +205,21 @@ const GridView = (() => {
       <li><span class="legend-swatch is-absent"></span>交差点なし</li>
     `;
 
+    // 上ル＝北＝画面の上、という対応をグリッド自身に語らせる。
+    // このアプリで一番伝えたいことなので、軸に方角の言葉を置く。
+    const compass = document.createElement('div');
+    compass.className = 'grid-compass';
+    compass.innerHTML = `
+      <span class="compass-up">↑ 上ル</span>
+      <span class="compass-side">
+        <span class="compass-east">東入ル ←</span>
+        <span class="compass-west">→ 西入ル</span>
+      </span>
+      <span class="compass-down">↓ 下ル</span>
+    `;
+
     root.innerHTML = '';
+    root.appendChild(compass);
     root.appendChild(scroll);
     root.appendChild(legend);
 

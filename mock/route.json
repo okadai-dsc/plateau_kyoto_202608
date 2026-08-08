@@ -10,58 +10,22 @@
   "start": {
     "tower_visible": false,
     "tower_bearing": "南西",
-    "hint": "京都タワーは見えません。通り名を確認して進んでください。"
+    "hint": "京都タワーは見えません。通り名の標識で方角を確かめてください。"
   },
-  "routes": [
+  "moves": [
     {
-      "id": "r1",
-      "visible_ratio": 0.33,
-      "turns": 1,
-      "steps": [
-        {
-          "direction": "西入ル",
-          "count": 10,
-          "to_street": "ns-12",
-          "to_street_name": "烏丸通",
-          "instruction": "10本西入ル（烏丸通まで）",
-          "tower_visible": false,
-          "tower_bearing": "南西"
-        },
-        {
-          "direction": "上ル",
-          "count": 4,
-          "to_street": "ew-08",
-          "to_street_name": "三条通",
-          "instruction": "京都タワーを背にして、4本上ル（三条通まで）",
-          "tower_visible": true,
-          "tower_bearing": "南"
-        }
-      ]
+      "direction": "上ル",
+      "count": 4,
+      "to_street": "ew-08",
+      "to_street_name": "三条通",
+      "instruction": "三条通まで上ル（およそ4本）"
     },
     {
-      "id": "r2",
-      "visible_ratio": 0.08,
-      "turns": 1,
-      "steps": [
-        {
-          "direction": "上ル",
-          "count": 1,
-          "to_street": "ew-08",
-          "to_street_name": "三条通",
-          "instruction": "1本上ル（三条通まで）",
-          "tower_visible": false,
-          "tower_bearing": "南西"
-        },
-        {
-          "direction": "西入ル",
-          "count": 11,
-          "to_street": "ns-12",
-          "to_street_name": "烏丸通",
-          "instruction": "11本西入ル（烏丸通まで）",
-          "tower_visible": false,
-          "tower_bearing": "南西"
-        }
-      ]
+      "direction": "西入ル",
+      "count": 11,
+      "to_street": "ns-12",
+      "to_street_name": "烏丸通",
+      "instruction": "烏丸通まで西入ル（およそ11本）"
     }
   ]
 }

@@ -11,7 +11,6 @@ const App = (() => {
     from: null,      // {ns, ew}
     to: null,        // {ns, ew}
     route: null,     // POST /api/route のレスポンス
-    routeIndex: 0,
     startSelector: null,
     gridView: null,
   };
@@ -34,6 +33,8 @@ const App = (() => {
     for (const screen of document.querySelectorAll('.screen')) {
       screen.hidden = screen.id !== `screen-${name}`;
     }
+    // 指示の画面ではヘッダを縮めて、手順に集中させる
+    document.body.classList.toggle('is-routing', name === 'route');
     window.scrollTo(0, 0);
   }
 
@@ -102,15 +103,23 @@ const App = (() => {
   }
 
   function updateSummary() {
-    $('#summary-current').textContent = intersectionLabel(state.from);
-
-    // 観光地が選ばれていれば、その名前を添える
+    const summary = $('#summary');
     const spotName = state.to ? state.gridView.spotNameAt(state.to) : null;
-    $('#summary-destination').textContent = state.to
-      ? (spotName ? `${spotName}（${intersectionLabel(state.to)}）` : intersectionLabel(state.to))
-      : '—';
-    highlightChip(spotName);
 
+    // 未選択のうちは何も出さない。グリッドを画面に入れたいので場所を空ける
+    if (!state.from && !state.to) {
+      summary.hidden = true;
+    } else {
+      summary.hidden = false;
+      summary.innerHTML = state.to
+        ? `<span class="summary-from">${intersectionLabel(state.from)}</span>` +
+          `<span class="summary-arrow">→</span>` +
+          `<span class="summary-to">${destinationLabel(state.to)}</span>`
+        : `<span class="summary-from">${intersectionLabel(state.from)}</span>` +
+          `<span class="summary-hint">目的地を選んでください</span>`;
+    }
+
+    highlightChip(spotName);
     $('#btn-go').disabled = !(state.from && state.to);
   }
 
@@ -120,7 +129,6 @@ const App = (() => {
     $('#btn-go').disabled = true;
     try {
       state.route = await Api.postRoute(state.from, state.to);
-      state.routeIndex = 0;
       renderRouteScreen();
       showScreen('route');
     } catch (error) {
@@ -130,78 +138,41 @@ const App = (() => {
     }
   }
 
-  // ── 3. 経路の指示（最重要画面） ─────────────────────────────
+  // ── 3. 方角と本数（最重要画面） ────────────────────────
+  //
+  // 経路は指定しない。碁盤の目では上ル/下ル と 東入ル/西入ル を
+  // どの順に消化しても着くので、覚えるのは方角2つと本数2つで足りる。
   function renderRouteScreen() {
     const route = state.route;
 
-    // モックは固定の1組しか持たないため、必ずレスポンスの from / to を正とする
     $('#route-from').textContent = intersectionLabel(route.from);
-    $('#route-to').textContent = intersectionLabel(route.to);
+    $('#route-to').textContent = destinationLabel(route.to);
 
     const hint = $('#route-hint');
     hint.textContent = route.start?.hint ?? '';
     hint.classList.toggle('is-invisible', route.start?.tower_visible === false);
 
-    renderRouteTabs(route.routes);
-    renderSteps(route.routes[state.routeIndex]);
-  }
-
-  function renderRouteTabs(routes) {
-    const tabs = $('#route-tabs');
-    tabs.innerHTML = '';
-    tabs.hidden = routes.length <= 1;
-    if (routes.length <= 1) return;
-
-    routes.forEach((route, index) => {
-      const button = document.createElement('button');
-      button.type = 'button';
-      button.className = 'route-tab';
-      button.classList.toggle('is-active', index === state.routeIndex);
-      button.innerHTML = `
-        <span class="route-tab-title">経路 ${index + 1}</span>
-        <span class="route-tab-meta">タワーが見える ${Math.round(route.visible_ratio * 100)}％ ／ 曲がり ${route.turns}回</span>
-      `;
-      button.addEventListener('click', () => {
-        state.routeIndex = index;
-        renderRouteScreen();
-      });
-      tabs.appendChild(button);
-    });
-  }
-
-  function renderSteps(route) {
-    const list = $('#route-steps');
+    const list = $('#route-moves');
     list.innerHTML = '';
-
-    route.steps.forEach((step, index) => {
+    for (const move of route.moves) {
       const item = document.createElement('li');
-      item.className = 'step';
-      item.classList.toggle('is-blind', step.tower_visible === false);
-
-      const number = document.createElement('span');
-      number.className = 'step-number';
-      number.textContent = index + 1;
-
-      const body = document.createElement('div');
-      body.className = 'step-body';
-
-      // instruction はバックエンドが完成させた文。ここで組み立てない（docs/API.md 3.2）
-      const text = document.createElement('p');
-      text.className = 'step-instruction';
-      text.textContent = step.instruction;
-      body.appendChild(text);
-
-      if (step.tower_visible === false) {
-        const note = document.createElement('p');
-        note.className = 'step-note';
-        note.textContent = 'この区間は京都タワーが見えません。通り名を頼りに進んでください。';
-        body.appendChild(note);
-      }
-
-      item.appendChild(number);
-      item.appendChild(body);
+      item.className = 'move';
+      // 文はバックエンドが作る（instruction）。ここでは構造化された値を並べるだけ
+      item.setAttribute('aria-label', move.instruction);
+      item.innerHTML = `
+        <span class="move-direction">${move.direction}</span>
+        <span class="move-target">${move.to_street_name}<span class="move-made">まで</span></span>
+        <span class="move-count">およそ${move.count}本</span>
+      `;
       list.appendChild(item);
-    });
+    }
+  }
+
+  /** 目的地に観光地名があれば添える */
+  function destinationLabel(intersection) {
+    const spot = state.gridView?.spotNameAt(intersection);
+    const label = intersectionLabel(intersection);
+    return spot ? `${spot}（${label}）` : label;
   }
 
   // ── 歩行中（画面を見せない） ────────────────────────────────
