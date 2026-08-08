@@ -50,150 +50,103 @@ const GridView = (() => {
       ew: grid.ew_streets[ewIndex].id,
     });
 
-    // ── 実寸から見た目を決める（表示専用・docs/API.md 2.1） ──
-    //
-    // 通りの間隔（街区の大きさ）でマスの大きさを、
-    // 通りの幅で罫線の太さを決める。実際の京都の比率に近づけるため。
-    // 平方根で圧縮しないと、御所の南北（約1.1km）が街区（約120m）の9倍になり
-    // 画面に収まらない。
-    const GAP_MIN = 22, GAP_MAX = 80, GAP_SCALE = 3.0;
-    const LINE_MIN = 1, LINE_MAX = 8, LINE_SCALE = 1 / 6;
+    // ── 全体が必ず見えるグリッド。スクロール前提の表にはしない ──
+    const nsCount = grid.ns_streets.length;
+    const ewCount = grid.ew_streets.length;
 
-    const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+    const mapWrap = document.createElement('div');
+    mapWrap.className = 'grid-map-wrap';
 
-    const DEFAULT_GAP = 120;   // 平安京の1町ぶん。pos を持たないデータのときに使う
+    const map = document.createElement('div');
+    map.className = 'grid-map';
+    map.setAttribute('role', 'group');
+    map.setAttribute('aria-label', '目的地を選ぶ碁盤の目');
+    map.style.setProperty('--ns-count', nsCount);
+    map.style.setProperty('--ew-count', ewCount);
 
-    /** 次の通りまでの距離(m) から、マスの大きさ(px) を出す */
-    function cellSize(streets, index) {
-      const here = streets[index];
-      const next = streets[index + 1];
-      // 最後の1本は次が無いので、ひとつ手前の間隔を流用する
-      const gap = next
-        ? next.pos - here.pos
-        : (index > 0 ? here.pos - streets[index - 1].pos : DEFAULT_GAP);
-      const meters = Number.isFinite(gap) && gap > 0 ? gap : DEFAULT_GAP;
-      return Math.round(clamp(GAP_SCALE * Math.sqrt(meters), GAP_MIN, GAP_MAX));
+    const edgeLabels = [
+      ['is-north', grid.ew_streets[0]?.name],
+      ['is-south', grid.ew_streets[ewCount - 1]?.name],
+      ['is-east', grid.ns_streets[0]?.name],
+      ['is-west', grid.ns_streets[nsCount - 1]?.name],
+    ];
+    for (const [className, text] of edgeLabels) {
+      if (!text) continue;
+      const label = document.createElement('span');
+      label.className = `grid-edge-label ${className}`;
+      label.textContent = text;
+      mapWrap.appendChild(label);
     }
-
-    /** 通りの幅(m) から、罫線の太さ(px) を出す */
-    const lineWeight = (street) =>
-      Math.round(clamp((street.width ?? 0) * LINE_SCALE, LINE_MIN, LINE_MAX));
-
-    const nsSize = grid.ns_streets.map((_, i) => cellSize(grid.ns_streets, i));
-    const ewSize = grid.ew_streets.map((_, i) => cellSize(grid.ew_streets, i));
-
-    // 幅の広い通りほど濃い線にする
-    const lineColor = (street) =>
-      (street.width ?? 0) >= 12 ? 'var(--major-line)' : 'var(--line)';
-
-    // ── 表の組み立て。本数はデータから取る（ハードコードしない） ──
-    const table = document.createElement('table');
-    table.className = 'grid';
-
-    // 列幅は colgroup でまとめて指定する
-    const colgroup = document.createElement('colgroup');
-    const headCol = document.createElement('col');
-    headCol.className = 'grid-col-head';
-    colgroup.appendChild(headCol);
-    for (const street of grid.ns_streets) {
-      const col = document.createElement('col');
-      col.style.width = `${nsSize[street.index]}px`;
-      colgroup.appendChild(col);
-    }
-    table.appendChild(colgroup);
-
-    const thead = document.createElement('thead');
-    const headRow = document.createElement('tr');
-    const corner = document.createElement('th');
-    corner.className = 'grid-corner';
-    corner.setAttribute('scope', 'col');
-    headRow.appendChild(corner);
-
-    for (const street of grid.ns_streets) {
-      const th = document.createElement('th');
-      th.className = 'grid-head-col';
-      // 主要な通りを強調して、実際の京都の街の見え方に近づける
-      if (street.major) th.classList.add('is-major');
-      th.setAttribute('scope', 'col');
-      th.textContent = street.name;
-      headRow.appendChild(th);
-    }
-    thead.appendChild(headRow);
-    table.appendChild(thead);
-
-    const tbody = document.createElement('tbody');
 
     for (const ewStreet of grid.ew_streets) {
       const ewIndex = ewStreet.index;
-      const tr = document.createElement('tr');
-      tr.style.height = `${ewSize[ewIndex]}px`;
-
-      const rowHead = document.createElement('th');
-      rowHead.className = 'grid-head-row';
-      if (ewStreet.major) rowHead.classList.add('is-major');
-      rowHead.setAttribute('scope', 'row');
-      rowHead.textContent = ewStreet.name;
-      tr.appendChild(rowHead);
-
       for (const nsStreet of grid.ns_streets) {
         const nsIndex = nsStreet.index;
-        const td = document.createElement('td');
-        td.className = 'grid-cell';
-        // 罫線の太さを通りの実際の幅に合わせる（御池通・堀川通は太く、小路は細く）
-        td.style.boxShadow =
-          `inset ${lineWeight(nsStreet)}px 0 0 ${lineColor(nsStreet)}, ` +
-          `inset 0 ${lineWeight(ewStreet)}px 0 ${lineColor(ewStreet)}`;
-        if (inSpotArea.has(key(nsIndex, ewIndex))) td.classList.add('is-spot-area');
-
         const spotName = spotAt.get(key(nsIndex, ewIndex));
         const label = spotName
           ? `${nsStreet.name} × ${ewStreet.name}（${spotName}）`
           : `${nsStreet.name} × ${ewStreet.name}`;
-
-        if (!exists(nsIndex, ewIndex)) {
-          // 存在しない交差点。押せないことが見て分かるようにする
-          td.classList.add('is-absent');
-          td.setAttribute('aria-label', `${label}（交差点なし）`);
-          tr.appendChild(td);
-          continue;
-        }
+        const isTower = towerNs === nsIndex && towerEw === ewIndex;
 
         const button = document.createElement('button');
         button.type = 'button';
         button.className = 'grid-button';
+        button.style.gridColumn = String(nsIndex + 1);
+        button.style.gridRow = String(ewIndex + 1);
+        button.style.setProperty('--ns-line', nsStreet.major ? 'var(--major-line)' : 'var(--line)');
+        button.style.setProperty('--ew-line', ewStreet.major ? 'var(--major-line)' : 'var(--line)');
+        button.style.setProperty('--ns-line-width', nsStreet.major ? '2px' : '1px');
+        button.style.setProperty('--ew-line-width', ewStreet.major ? '2px' : '1px');
         button.dataset.ns = nsStreet.id;
         button.dataset.ew = ewStreet.id;
         button.dataset.label = label;
-
-        // 現在地や目的地の表示を外したときに戻す既定の見た目
-        const isTower = towerNs === nsIndex && towerEw === ewIndex;
-        button.dataset.baseText = isTower ? '塔' : (spotName ? '◉' : '');
         button.title = label;
-        if (isTower) {
-          button.classList.add('is-tower');
-          button.setAttribute('aria-label', `${label}（京都タワー）`);
-        } else {
-          if (spotName) {
-            button.classList.add('is-spot');
-            button.dataset.spot = spotName;
-          }
-          button.setAttribute('aria-label', label);
-        }
-        button.textContent = button.dataset.baseText;
 
+        if (inSpotArea.has(key(nsIndex, ewIndex))) button.classList.add('is-spot-area');
+        if (isTower) button.classList.add('is-tower');
+        if (spotName) {
+          button.classList.add('is-spot');
+          button.dataset.spot = spotName;
+        }
+
+        if (!exists(nsIndex, ewIndex)) {
+          button.classList.add('is-absent');
+          button.disabled = true;
+          button.setAttribute('aria-label', `${label}（交差点なし）`);
+          map.appendChild(button);
+          continue;
+        }
+
+        button.dataset.baseAria = isTower ? `${label}（京都タワー）` : label;
+        button.setAttribute('aria-label', button.dataset.baseAria);
         button.addEventListener('click', () => selectDestination({ nsIndex, ewIndex }));
-        td.appendChild(button);
         cellByKey.set(key(nsIndex, ewIndex), button);
-        tr.appendChild(td);
+        map.appendChild(button);
       }
-      tbody.appendChild(tr);
     }
 
-    table.appendChild(tbody);
+    mapWrap.appendChild(map);
 
-    const scroll = document.createElement('div');
-    scroll.className = 'grid-scroll';
-    scroll.appendChild(table);
+    const nudge = document.createElement('div');
+    nudge.className = 'grid-nudge';
+    nudge.hidden = true;
+
+    const nudgeButtons = [
+      ['is-up', '↑', '上ル', 0, -1],
+      ['is-left', '←', '東入ル', -1, 0],
+      ['is-right', '→', '西入ル', 1, 0],
+      ['is-down', '↓', '下ル', 0, 1],
+    ].map(([className, text, label, deltaNs, deltaEw]) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = `grid-nudge-button ${className}`;
+      button.textContent = text;
+      button.title = label;
+      button.setAttribute('aria-label', `目的地を${label}へ動かす`);
+      button.addEventListener('click', () => moveSelection(deltaNs, deltaEw));
+      nudge.appendChild(button);
+      return { button, deltaNs, deltaEw };
+    });
 
     const legend = document.createElement('ul');
     legend.className = 'grid-legend';
@@ -220,7 +173,8 @@ const GridView = (() => {
 
     root.innerHTML = '';
     root.appendChild(compass);
-    root.appendChild(scroll);
+    root.appendChild(mapWrap);
+    root.appendChild(nudge);
     root.appendChild(legend);
 
     /** 現在地・目的地の装飾を外して既定の見た目に戻す */
@@ -229,14 +183,14 @@ const GridView = (() => {
       if (!button) return;
       button.classList.remove('is-current', 'is-selected');
       button.disabled = false;
-      button.textContent = button.dataset.baseText;
-      button.setAttribute('aria-label', button.dataset.label);
+      button.setAttribute('aria-label', button.dataset.baseAria);
     }
 
     function clearDestination(notify = true) {
       if (!selected) return;
       resetCell(selected);
       selected = null;
+      updateNudge();
       if (notify && onSelect) onSelect(null);
     }
 
@@ -248,8 +202,8 @@ const GridView = (() => {
       selected = position;
       const button = cellAt(position);
       button.classList.add('is-selected');
-      button.textContent = '★';
       button.setAttribute('aria-label', `${button.dataset.label}（目的地）`);
+      updateNudge();
 
       if (onSelect) onSelect(toIntersection(position));
     }
@@ -258,7 +212,10 @@ const GridView = (() => {
     function setCurrent(intersection) {
       if (current) resetCell(current);
       current = null;
-      if (!intersection) return;
+      if (!intersection) {
+        updateNudge();
+        return;
+      }
 
       const position = {
         nsIndex: Api.indexOf(intersection.ns),
@@ -273,23 +230,36 @@ const GridView = (() => {
       current = position;
       button.classList.add('is-current');
       button.disabled = true;
-      button.textContent = '今';
       button.setAttribute('aria-label', `${button.dataset.label}（現在地）`);
-      scrollIntoGrid(button);
+      updateNudge();
     }
 
-    /**
-     * 現在地をグリッドの中央に寄せる。
-     *
-     * scrollIntoView() は親要素も巻き込んでページ全体をスクロールさせ、
-     * 同じ画面の上にあるセレクタが視界から外れてしまう。
-     * そのためスクロールコンテナだけを動かす。
-     */
-    function scrollIntoGrid(button) {
-      const container = scroll.getBoundingClientRect();
-      const target = button.getBoundingClientRect();
-      scroll.scrollLeft += (target.left - container.left) - (container.width - target.width) / 2;
-      scroll.scrollTop += (target.top - container.top) - (container.height - target.height) / 2;
+    function nextSelectable(from, deltaNs, deltaEw) {
+      let nsIndex = from.nsIndex + deltaNs;
+      let ewIndex = from.ewIndex + deltaEw;
+      while (nsIndex >= 0 && nsIndex < nsCount && ewIndex >= 0 && ewIndex < ewCount) {
+        const position = { nsIndex, ewIndex };
+        if (exists(nsIndex, ewIndex) && !same(position, current)) return position;
+        nsIndex += deltaNs;
+        ewIndex += deltaEw;
+      }
+      return null;
+    }
+
+    function moveSelection(deltaNs, deltaEw) {
+      if (!selected) return;
+      const next = nextSelectable(selected, deltaNs, deltaEw);
+      if (!next) return;
+      selectDestination(next);
+      cellAt(next)?.focus({ preventScroll: true });
+    }
+
+    function updateNudge() {
+      nudge.hidden = !selected;
+      if (!selected) return;
+      for (const item of nudgeButtons) {
+        item.button.disabled = !nextSelectable(selected, item.deltaNs, item.deltaEw);
+      }
     }
 
     /** 観光地チップなど、グリッド外から目的地を指定する */
@@ -300,7 +270,7 @@ const GridView = (() => {
       };
       if (!cellAt(position)) return;
       selectDestination(position);
-      scrollIntoGrid(cellAt(position));
+      cellAt(position)?.focus({ preventScroll: true });
     }
 
     /** その交差点にある観光地名（無ければ null） */

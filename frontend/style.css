@@ -241,75 +241,63 @@ body.is-routing .app-tagline { display: none; }
 .summary-arrow { color: var(--ink-muted); }
 .summary-hint { color: var(--ink-muted); font-size: 0.8rem; }
 
-.grid-scroll {
-  max-height: 46vh;
-  overflow: auto;
+.grid-map-wrap {
+  position: relative;
+  overflow: hidden;
+  padding: 1.1rem 1.2rem 1.15rem;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--surface);
-  -webkit-overflow-scrolling: touch;
 }
 
-table.grid {
-  border-collapse: separate;
-  border-spacing: 0;
-  /*
-   * 列数が増えても列を圧縮せず、横スクロールさせる。
-   * 実データでは縦横それぞれ数十本になるため（docs/FRONTEND.md 4.2 要件5）。
-   */
-  width: max-content;
-}
-
-.grid th {
-  position: sticky;
-  background: var(--surface);
-  color: var(--ink-muted);
-  font-size: 0.7rem;
-  font-weight: 500;
-  white-space: nowrap;
-}
-
-.grid thead th {
-  top: 0;
+.grid-edge-label {
+  position: absolute;
   z-index: 2;
-  padding: 0.4rem 0.2rem;
-  border-bottom: 1px solid var(--line);
+  max-width: 45%;
+  overflow: hidden;
+  color: var(--ink-muted);
+  font-size: 0.62rem;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  pointer-events: none;
 }
 
-.grid tbody th {
-  left: 0;
-  z-index: 1;
-  padding: 0 0.5rem;
-  text-align: right;
-  border-right: 1px solid var(--line);
+.grid-edge-label.is-north {
+  top: 0.25rem;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
-.grid th.grid-corner {
-  top: 0;
-  left: 0;
-  z-index: 3;
-  border-bottom: 1px solid var(--line);
-  border-right: 1px solid var(--line);
+.grid-edge-label.is-south {
+  bottom: 0.25rem;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
-/*
- * マスの大きさは街区の実際の広さから、罫線の太さは通りの実際の幅から
- * JavaScript が算出して指定する（frontend/js/grid.js）。
- * ここでは下限だけ決めておく。
- */
-.grid-cell {
-  min-width: 1.4rem;
-  padding: 2px;
+.grid-edge-label.is-east {
+  top: 50%;
+  left: 0.25rem;
+  transform: translateY(-50%);
+  writing-mode: vertical-rl;
 }
 
-.grid thead th.grid-head-col { min-width: 3.4rem; }
-.grid tbody th.grid-head-row { min-width: 4.2rem; }
-.grid col.grid-col-head { width: 4.2rem; }
+.grid-edge-label.is-west {
+  top: 50%;
+  right: 0.25rem;
+  transform: translateY(-50%);
+  writing-mode: vertical-rl;
+}
 
-/* 主要な通りは見出しを濃くする */
-.grid th.is-major {
-  color: var(--ink);
-  font-weight: 700;
+.grid-map {
+  display: grid;
+  grid-template-columns: repeat(var(--ns-count), minmax(0, 1fr));
+  grid-template-rows: repeat(var(--ew-count), minmax(0, 1fr));
+  width: 100%;
+  height: min(31vh, 15rem);
+  border: 1px solid var(--line);
+  background: var(--line);
+  touch-action: manipulation;
 }
 
 /* ── 観光地 ─────────────────────────────────────────────── */
@@ -345,57 +333,139 @@ table.grid {
   font-weight: 600;
 }
 
-/* 敷地の広がりを淡く塗る（御所・二条城・京都駅など） */
-.grid-cell.is-spot-area { background: var(--spot-soft); }
-
-.grid-button.is-spot {
-  border-color: var(--spot);
-  color: var(--spot);
-  font-size: 0.6rem;
-}
-
-.grid-cell.is-absent {
-  background:
-    repeating-linear-gradient(45deg,
-      transparent, transparent 3px,
-      var(--absent) 3px, var(--absent) 6px);
-}
-
 .grid-button {
+  position: relative;
   width: 100%;
   height: 100%;
-  border: 1px solid var(--line);
-  border-radius: 4px;
-  background: transparent;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: var(--surface);
+  box-shadow:
+    inset var(--ns-line-width, 1px) 0 0 var(--ns-line, var(--line)),
+    inset 0 var(--ew-line-width, 1px) 0 var(--ew-line, var(--line));
   color: var(--ink);
   font: inherit;
-  font-size: 0.75rem;
   cursor: pointer;
 }
 
 .grid-button:hover:not(:disabled) {
-  border-color: var(--accent);
   background: var(--accent-soft);
 }
 
+.grid-button:focus-visible {
+  z-index: 4;
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+}
+
+.grid-button::before,
+.grid-button::after {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 4px;
+  font-size: 0.58rem;
+  font-weight: 700;
+  line-height: 1;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
+/* 敷地の広がりを淡く塗る（御所・二条城・京都駅など） */
+.grid-button.is-spot-area { background: var(--spot-soft); }
+
+.grid-button.is-spot::before {
+  content: '◉';
+  color: var(--spot);
+  font-size: 0.55rem;
+}
+
+.grid-button.is-tower::before {
+  content: '塔';
+  border: 1px solid var(--warn);
+  background: var(--surface);
+  color: var(--warn);
+}
+
 .grid-button.is-current {
+  z-index: 3;
   background: var(--ink);
-  border-color: var(--ink);
   color: var(--bg);
   opacity: 1;
   cursor: default;
 }
 
+.grid-button.is-current::after {
+  content: '今';
+  background: var(--ink);
+  color: var(--bg);
+  box-shadow: 0 0 0 2px var(--surface);
+}
+
 .grid-button.is-selected {
+  z-index: 3;
   background: var(--accent);
-  border-color: var(--accent);
   color: #fff;
 }
 
-.grid-button.is-tower {
-  border-color: var(--warn);
-  color: var(--warn);
+.grid-button.is-selected::after {
+  content: '★';
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 0 0 2px var(--surface);
 }
+
+.grid-button.is-absent {
+  background:
+    repeating-linear-gradient(45deg,
+      transparent, transparent 3px,
+      var(--absent) 3px, var(--absent) 6px);
+  cursor: default;
+  opacity: 1;
+}
+
+.grid-nudge {
+  display: grid;
+  grid-template-columns: repeat(3, 2.4rem);
+  grid-template-rows: repeat(3, 2.4rem);
+  justify-content: center;
+  gap: 0.35rem;
+  margin-top: 0.75rem;
+}
+
+.grid-nudge-button {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.grid-nudge-button:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.grid-nudge-button:disabled {
+  color: var(--ink-muted);
+  cursor: default;
+  opacity: 0.35;
+}
+
+.grid-nudge-button.is-up { grid-column: 2; grid-row: 1; }
+.grid-nudge-button.is-left { grid-column: 1; grid-row: 2; }
+.grid-nudge-button.is-right { grid-column: 3; grid-row: 2; }
+.grid-nudge-button.is-down { grid-column: 2; grid-row: 3; }
 
 .grid-legend {
   display: flex;
@@ -582,7 +652,9 @@ table.grid {
 
 /* ── 画面が狭いとき ─────────────────────────────────────── */
 @media (max-width: 380px) {
-  .grid-cell { width: 2.1rem; height: 2.1rem; }
-  .selector { flex-direction: column; align-items: stretch; }
-  .selector-cross { display: none; }
+  body { padding-inline: 0.75rem; }
+  .grid-map-wrap { padding-inline: 0.8rem; }
+  .grid-map { height: 14rem; }
+  .selector { gap: 0.5rem; }
+  .selector-cross { padding-bottom: 0.7rem; }
 }
