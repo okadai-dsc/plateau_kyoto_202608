@@ -6,7 +6,7 @@
  *
  * 行 = ew（横の通り）、列 = ns（縦の通り）。docs/API.md 3.1 の exists と同じ向き。
  *
- * 現在地は同じ画面のセレクタで随時変わるため、setCurrent() で後から差し替えられる。
+ * 現在地は別画面のセレクタで決まるため、setCurrent() で後から差し替えられる。
  */
 const GridView = (() => {
 
@@ -53,9 +53,58 @@ const GridView = (() => {
     // ── 全体が必ず見えるグリッド。スクロール前提の表にはしない ──
     const nsCount = grid.ns_streets.length;
     const ewCount = grid.ew_streets.length;
+    const ZOOM_LEVELS = [
+      { label: '全体', width: '100%', height: '15rem' },
+      { label: '標準', width: '155%', height: '24rem' },
+      { label: '拡大', width: '230%', height: '34rem' },
+    ];
+    let zoomIndex = 1;
+
+    const zoomToolbar = document.createElement('div');
+    zoomToolbar.className = 'grid-toolbar';
+
+    const zoomOut = document.createElement('button');
+    zoomOut.type = 'button';
+    zoomOut.className = 'grid-zoom-button';
+    zoomOut.textContent = '−';
+    zoomOut.setAttribute('aria-label', '縮小');
+
+    const zoomRange = document.createElement('input');
+    zoomRange.type = 'range';
+    zoomRange.className = 'grid-zoom-range';
+    zoomRange.min = '0';
+    zoomRange.max = String(ZOOM_LEVELS.length - 1);
+    zoomRange.step = '1';
+    zoomRange.value = String(zoomIndex);
+    zoomRange.setAttribute('aria-label', '地図の拡大率');
+
+    const zoomIn = document.createElement('button');
+    zoomIn.type = 'button';
+    zoomIn.className = 'grid-zoom-button';
+    zoomIn.textContent = '+';
+    zoomIn.setAttribute('aria-label', '拡大');
+
+    const zoomFit = document.createElement('button');
+    zoomFit.type = 'button';
+    zoomFit.className = 'grid-zoom-fit';
+    zoomFit.textContent = '全体';
+    zoomFit.setAttribute('aria-label', '全体表示');
+
+    const zoomLabel = document.createElement('span');
+    zoomLabel.className = 'grid-zoom-label';
+    zoomLabel.setAttribute('aria-live', 'polite');
+
+    zoomToolbar.append(zoomOut, zoomRange, zoomIn, zoomFit, zoomLabel);
+    zoomOut.addEventListener('click', () => setZoom(zoomIndex - 1));
+    zoomIn.addEventListener('click', () => setZoom(zoomIndex + 1));
+    zoomFit.addEventListener('click', () => setZoom(0));
+    zoomRange.addEventListener('input', () => setZoom(Number(zoomRange.value)));
 
     const mapWrap = document.createElement('div');
     mapWrap.className = 'grid-map-wrap';
+
+    const mapScroll = document.createElement('div');
+    mapScroll.className = 'grid-map-scroll';
 
     const map = document.createElement('div');
     map.className = 'grid-map';
@@ -125,7 +174,8 @@ const GridView = (() => {
       }
     }
 
-    mapWrap.appendChild(map);
+    mapScroll.appendChild(map);
+    mapWrap.appendChild(mapScroll);
 
     const nudge = document.createElement('div');
     nudge.className = 'grid-nudge';
@@ -173,9 +223,11 @@ const GridView = (() => {
 
     root.innerHTML = '';
     root.appendChild(compass);
+    root.appendChild(zoomToolbar);
     root.appendChild(mapWrap);
     root.appendChild(nudge);
     root.appendChild(legend);
+    setZoom(zoomIndex, false);
 
     /** 現在地・目的地の装飾を外して既定の見た目に戻す */
     function resetCell(position) {
@@ -204,6 +256,7 @@ const GridView = (() => {
       button.classList.add('is-selected');
       button.setAttribute('aria-label', `${button.dataset.label}（目的地）`);
       updateNudge();
+      scrollIntoMap(button);
 
       if (onSelect) onSelect(toIntersection(position));
     }
@@ -232,6 +285,7 @@ const GridView = (() => {
       button.disabled = true;
       button.setAttribute('aria-label', `${button.dataset.label}（現在地）`);
       updateNudge();
+      scrollIntoMap(button);
     }
 
     function nextSelectable(from, deltaNs, deltaEw) {
@@ -252,6 +306,7 @@ const GridView = (() => {
       if (!next) return;
       selectDestination(next);
       cellAt(next)?.focus({ preventScroll: true });
+      scrollIntoMap(cellAt(next), true);
     }
 
     function updateNudge() {
@@ -260,6 +315,41 @@ const GridView = (() => {
       for (const item of nudgeButtons) {
         item.button.disabled = !nextSelectable(selected, item.deltaNs, item.deltaEw);
       }
+    }
+
+    function setZoom(nextIndex, keepContext = true) {
+      zoomIndex = Math.min(ZOOM_LEVELS.length - 1, Math.max(0, nextIndex));
+      const zoom = ZOOM_LEVELS[zoomIndex];
+      map.style.width = zoom.width;
+      map.style.height = zoom.height;
+      zoomRange.value = String(zoomIndex);
+      zoomLabel.textContent = zoom.label;
+      zoomOut.disabled = zoomIndex === 0;
+      zoomIn.disabled = zoomIndex === ZOOM_LEVELS.length - 1;
+      zoomFit.disabled = zoomIndex === 0;
+      if (keepContext) revealContext();
+    }
+
+    function scrollIntoMap(button, center = false) {
+      if (!button || mapScroll.offsetParent === null) return;
+      const container = mapScroll.getBoundingClientRect();
+      const target = button.getBoundingClientRect();
+      const outside =
+        target.left < container.left ||
+        target.right > container.right ||
+        target.top < container.top ||
+        target.bottom > container.bottom;
+      if (!outside && !center) return;
+      mapScroll.scrollLeft +=
+        (target.left - container.left) - (container.width - target.width) / 2;
+      mapScroll.scrollTop +=
+        (target.top - container.top) - (container.height - target.height) / 2;
+    }
+
+    function revealContext() {
+      const target = cellAt(selected) ?? cellAt(current);
+      if (!target) return;
+      requestAnimationFrame(() => scrollIntoMap(target, true));
     }
 
     /** 観光地チップなど、グリッド外から目的地を指定する */
@@ -271,6 +361,7 @@ const GridView = (() => {
       if (!cellAt(position)) return;
       selectDestination(position);
       cellAt(position)?.focus({ preventScroll: true });
+      scrollIntoMap(cellAt(position), true);
     }
 
     /** その交差点にある観光地名（無ければ null） */
@@ -286,6 +377,7 @@ const GridView = (() => {
       spotNameAt,
       clearDestination,
       getSelected: () => (selected ? toIntersection(selected) : null),
+      revealContext,
     };
   }
 
