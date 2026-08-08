@@ -187,63 +187,60 @@ v1 の全機能が完成させられる。最後に名前テーブルを差し�
   "start": {
     "tower_visible": true,
     "tower_bearing": "南",
-    "hint": "京都タワーが南に見えます。背にして立ってください。"
+    "hint": "京都タワーが南に見えます。タワーを正面に見て、真後ろが上ルです。"
   },
-  "routes": [
+  "moves": [
     {
-      "id": "r1",
-      "visible_ratio": 0.75,
-      "turns": 1,
-      "steps": [
-        {
-          "direction": "上ル",
-          "count": 4,
-          "to_street": "ew-07",
-          "to_street_name": "8通",
-          "instruction": "京都タワーを背にして、4本上ル（8通まで）",
-          "tower_visible": true,
-          "tower_bearing": "南"
-        },
-        {
-          "direction": "東入ル",
-          "count": 3,
-          "to_street": "ns-02",
-          "to_street_name": "C通",
-          "instruction": "8通を右手に3本東入ル（C通まで）",
-          "tower_visible": false,
-          "tower_bearing": "南西"
-        }
-      ]
+      "direction": "上ル",
+      "count": 4,
+      "to_street": "ew-08",
+      "to_street_name": "三条通",
+      "instruction": "三条通まで上ル（およそ4本）"
+    },
+    {
+      "direction": "西入ル",
+      "count": 11,
+      "to_street": "ns-12",
+      "to_street_name": "烏丸通",
+      "instruction": "烏丸通まで西入ル（およそ11本）"
     }
   ]
 }
 ```
 
-#### routes
+#### moves
 
-経路は**1つに絞らない**（SPEC 3.5）。良い順に並べて返す。**先頭が推奨経路。**
+**経路は返さない。**返すのは「方角 × 本数」だけ（SPEC 3.5）。
 
-| フィールド | 型 | 説明 |
-|---|---|---|
-| `id` | string | 経路の識別子 |
-| `visible_ratio` | float | 経路上でタワーが見える交差点の割合（0.0〜1.0） |
-| `turns` | int | 曲がる回数 |
-| `steps` | Step[] | 手順 |
+碁盤の目では 上ル/下ル と 東入ル/西入ル を**どの順に消化しても着く**ので、
+覚えるのは方角2つと本数2つで足りる。順番まで決めると普通のナビになり、
+この企画の一番の良さが消える。
 
-#### Step
+要素は最大2つ（同じ通り上なら1つ）。
 
 | フィールド | 型 | 説明 |
 |---|---|---|
-| `direction` | Direction | 進む向き |
-| `count` | int | 何本進むか |
+| `direction` | Direction | `上ル` / `下ル` / `東入ル` / `西入ル` |
+| `count` | int | **目安の本数。**通り順（数え歌の並び）での差 |
 | `to_street` | string | 到達する通りの `id` |
 | `to_street_name` | string | 到達する通りの表示名 |
-| `instruction` | string | **表示用の完成した日本語文。**フロントはこれをそのまま出す |
-| `tower_visible` | bool | この手順の開始地点でタワーが見えるか |
-| `tower_bearing` | Bearing | 開始地点から見たタワーの方角 |
+| `instruction` | string | 表示用の完成した日本語文 |
 
-> **`instruction` の文面はバックエンドが作る。**
-> フロントで文章を組み立てないこと（表現を1箇所に集約するため）。
+> **本数は目安。通り名が正。**
+> 実際に横切る本数は通る道で変わる（届いていない小路があるため）。
+> 順番を決めない以上ひとつに定まらないので、通り名で答え合わせできるようにしてある。
+
+#### start
+
+京都タワーは**経路を選ぶためではなく、どちらが上ルかを知るため**にある。
+
+```json
+{
+  "tower_visible": true,
+  "tower_bearing": "南",
+  "hint": "京都タワーが南に見えます。タワーを正面に見て、真後ろが上ルです。"
+}
+```
 
 ---
 
