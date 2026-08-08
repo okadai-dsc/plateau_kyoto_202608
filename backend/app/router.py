@@ -48,16 +48,25 @@ class RouteService:
         if not self._walkable(from_ns, from_ew, to_ns, to_ew):
             raise RouteNotFound()
 
-        start_visible = self.landmark.tower_visible_indices(from_ns, from_ew)
-        start_bearing = self.landmark.tower_bearing_indices(from_ns, from_ew)
+        landmark, bearing, distance = self.landmark.best(from_ns, from_ew)
 
         return {
             "from": self.grid.intersection_from_indices(from_ns, from_ew),
             "to": self.grid.intersection_from_indices(to_ns, to_ew),
             "start": {
-                "tower_visible": start_visible,
-                "tower_bearing": start_bearing,
-                "hint": build_start_hint(start_visible, start_bearing),
+                "landmark": None if landmark is None else {
+                    "id": landmark.id,
+                    "name": landmark.name,
+                    "layer": landmark.layer,
+                    "bearing": bearing,
+                    "distance": round(distance or 0),
+                },
+                "hint": build_start_hint(
+                    None if landmark is None else landmark.name,
+                    bearing,
+                    distance,
+                    0 if landmark is None else landmark.min_distance,
+                ),
             },
             "moves": self._moves(from_ns, from_ew, to_ns, to_ew),
         }

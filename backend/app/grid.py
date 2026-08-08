@@ -28,6 +28,7 @@ class Grid:
             "ew": int(streets_data["tower"]["ew"]),
         }
         self._spots: list[dict[str, Any]] = streets_data.get("spots", [])
+        self._landmarks: list[dict[str, Any]] = streets_data.get("landmarks", [])
 
         self._validate_streets()
         self._validate_matrix(self._exists, "exists")
@@ -48,6 +49,22 @@ class Grid:
     @property
     def tower_indices(self) -> tuple[int, int]:
         return self._tower_indices["ns"], self._tower_indices["ew"]
+
+    @property
+    def landmarks(self) -> list[dict[str, Any]]:
+        """方角を知るための目印（docs/API.md 3.2）。"""
+        return [landmark.copy() for landmark in self._landmarks]
+
+    def position(self, ns_index: int, ew_index: int) -> tuple[float, float]:
+        """交差点の位置(m)。x = 川端通から西へ、y = 今出川通から南へ。
+
+        表示と方位の計算にだけ使う相対距離であって、緯度経度ではない。
+        """
+        self.validate_indices(ns_index, ew_index)
+        return (
+            float(self._streets["ns"][ns_index].get("pos", 0)),
+            float(self._streets["ew"][ew_index].get("pos", 0)),
+        )
 
     @property
     def spots(self) -> list[dict[str, Any]]:

@@ -25,13 +25,32 @@ def write_grid_data(
     visible: list[list[bool]] | None = None,
 ) -> None:
     data_dir.mkdir(parents=True, exist_ok=True)
+    # pos は通り同士の相対距離(m)。方位の計算に使う（docs/API.md 2.1）
+    step = 120
     streets = {
-        "ns": [{"index": index, "name": f"N{index}通"} for index in range(ns_count)],
-        "ew": [{"index": index, "name": f"E{index}通"} for index in range(ew_count)],
+        "ns": [
+            {"index": i, "name": f"N{i}通", "pos": i * step, "width": 8}
+            for i in range(ns_count)
+        ],
+        "ew": [
+            {"index": i, "name": f"E{i}通", "pos": i * step, "width": 8}
+            for i in range(ew_count)
+        ],
         "tower": {"ns": tower[0], "ew": tower[1]},
+        "landmarks": [
+            {
+                "id": "tower",
+                "name": "京都タワー",
+                "layer": 1,
+                "x": tower[0] * step,
+                "y": tower[1] * step,
+                "min_distance": 0,
+            }
+        ],
     }
     exists_matrix = exists or [[True for _ in range(ns_count)] for _ in range(ew_count)]
-    visible_matrix = visible or [[False for _ in range(ns_count)] for _ in range(ew_count)]
+    # 既定では全交差点から目印が見えることにする（方位の検証をしやすくするため）
+    visible_matrix = visible or [[True for _ in range(ns_count)] for _ in range(ew_count)]
 
     (data_dir / "streets.json").write_text(
         json.dumps(streets, ensure_ascii=False),
@@ -42,7 +61,7 @@ def write_grid_data(
         encoding="utf-8",
     )
     (data_dir / "visible.json").write_text(
-        json.dumps({"visible": visible_matrix}, ensure_ascii=False),
+        json.dumps({"visible": {"tower": visible_matrix}}, ensure_ascii=False),
         encoding="utf-8",
     )
 

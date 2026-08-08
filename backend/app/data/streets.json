@@ -427,6 +427,24 @@
     "ns": 12,
     "ew": 24
   },
+  "landmarks": [
+    {
+      "id": "tower",
+      "name": "京都タワー",
+      "layer": 1,
+      "x": 840.0,
+      "y": 4100.0,
+      "min_distance": 200
+    },
+    {
+      "id": "daimonji",
+      "name": "大文字",
+      "layer": 2,
+      "x": -2780.0,
+      "y": 278.0,
+      "min_distance": 0
+    }
+  ],
   "spots": [
     {
       "name": "京都御苑",

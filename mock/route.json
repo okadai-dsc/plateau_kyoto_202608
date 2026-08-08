@@ -8,9 +8,14 @@
     "ew": "ew-08"
   },
   "start": {
-    "tower_visible": false,
-    "tower_bearing": "南西",
-    "hint": "京都タワーは見えません。通り名の標識で方角を確かめてください。"
+    "landmark": {
+      "id": "daimonji",
+      "name": "大文字",
+      "layer": 2,
+      "bearing": "北東",
+      "distance": 3605
+    },
+    "hint": "大文字が北東に見えます。大文字を正面に見て、左前が上ルです。"
   },
   "moves": [
     {
