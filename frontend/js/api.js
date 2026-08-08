@@ -7,8 +7,8 @@
  * 契約: docs/API.md
  */
 const Api = (() => {
-  // ── バックエンド接続時はここを false にする。変更箇所はここ1つだけ ──
-  const USE_MOCK = true;
+  // ── モックに戻すときはここを true にする。変更箇所はここ1つだけ ──
+  const USE_MOCK = false;
 
   const API_BASE = '/api';
   const MOCK_BASE = '../mock';

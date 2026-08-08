@@ -6,24 +6,32 @@
 
 ## 起動
 
-`mock/` はリポジトリのルート直下にあるため、**ルートから配信すること。**
-`frontend/` を配信ルートにすると `../mock/*.json` に届かない。
+**バックエンドが画面も配信する。**（`js/api.js` が同一オリジンの `/api` を叩くため）
 
 ```bash
 # リポジトリのルートで
-python3 -m http.server 8000
+./.venv/bin/python -m uvicorn backend.app.main:app --reload
 ```
 
-→ http://localhost:8000/frontend/
+→ http://localhost:8000
+
+### バックエンド無しで動かす場合
+
+`js/api.js` の `USE_MOCK` を `true` にすると `mock/*.json` を読む。
+その場合も `mock/` がルート直下にあるため、**ルートから配信すること。**
+
+```bash
+python3 -m http.server 8000    # → http://localhost:8000/frontend/
+```
 
 > `file://` で直接開くと fetch が CORS で失敗する。必ず HTTP で配信する。
 
-## バックエンドへの切り替え
+## モック ⇄ 実API の切り替え
 
 `js/api.js` の先頭にある定数を1つ変えるだけ。
 
 ```js
-const USE_MOCK = true;   // ← false にすると /api/* を叩く
+const USE_MOCK = false;   // ← true にすると mock/*.json を読む
 ```
 
 他のファイルは `Api.*` しか呼んでいないので、変更箇所はここだけ。
@@ -63,11 +71,12 @@ const USE_MOCK = true;   // ← false にすると /api/* を叩く
 - **指示文をフロントで組み立てていない。** `instruction` をそのまま表示する
 - **歩いている間は画面を見せない。** 「覚えた」で全画面を暗転させる
 
-## 既知の制限
+## 既知の制限（`USE_MOCK = true` のときのみ）
 
 - モックは固定の1組（`F通 × 12通 → C通 × 8通`）しか経路を持たない。
   そのため**選んだ目的地に関わらず同じ経路が返る**。
   画面はレスポンスの `from` / `to` を正として描画しているので表示は矛盾しない。
-  実APIに繋げば解消する。
 - 到着の講評文はバックエンドが生成する（`POST /api/arrival`）。
   モックではズレの数値のみ表示し、講評文は出ない。
+
+いずれも実API（`USE_MOCK = false`）では解消する。

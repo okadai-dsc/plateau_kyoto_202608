@@ -153,7 +153,9 @@ def build_steps(frm, to, vertical_first, visible):
         # 手順の開始地点で評価する（進んだ後ではない）
         start_ns, start_ew = ns, ew
         bearing = tower_bearing(start_ns, start_ew)
-        phrase = tower_phrase(direction, bearing)
+        # タワーが見えない区間では方位の手がかりを付けない（docs/BACKEND.md 4.4）
+        visible_here = visible[start_ew][start_ns]
+        phrase = tower_phrase(direction, bearing) if visible_here else None
 
         if axis == "ew":
             ew = ew_to
@@ -162,14 +164,17 @@ def build_steps(frm, to, vertical_first, visible):
             ns = ns_to
             street_id, street_name = f"ns-{ns:02d}", NS_NAMES[ns]
 
-        head = phrase if phrase else "そのまま"
+        instruction = f"{count}本{direction}（{street_name}まで）"
+        if phrase:
+            instruction = f"{phrase}、{instruction}"
+
         steps.append({
             "direction": direction,
             "count": count,
             "to_street": street_id,
             "to_street_name": street_name,
-            "instruction": f"{head}、{count}本{direction}（{street_name}まで）",
-            "tower_visible": visible[start_ew][start_ns],
+            "instruction": instruction,
+            "tower_visible": visible_here,
             "tower_bearing": bearing,
         })
     return steps

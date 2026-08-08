@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 from functools import lru_cache
+from pathlib import Path
 from typing import Any
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 from .errors import IntersectionNotFound, KyoterError
 from .grid import Grid
@@ -117,3 +119,20 @@ def _count_word(count: int) -> str:
         10: "十",
     }
     return words.get(count, str(count))
+
+
+# ── 静的ファイルの配信 ───────────────────────────────────────
+# フロントは同一オリジンの /api を叩くため（frontend/js/api.js）、
+# バックエンドが画面も配信して1コマンドで起動できるようにする。
+# API のルート定義より後に mount すること（"/" が先に一致してしまうため）。
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+_FRONTEND_DIR = _REPO_ROOT / "frontend"
+_MOCK_DIR = _REPO_ROOT / "mock"
+
+if _MOCK_DIR.is_dir():
+    # USE_MOCK = true のままでも動くようにしておく
+    app.mount("/mock", StaticFiles(directory=_MOCK_DIR), name="mock")
+
+if _FRONTEND_DIR.is_dir():
+    app.mount("/frontend", StaticFiles(directory=_FRONTEND_DIR, html=True), name="frontend")
+    app.mount("/", StaticFiles(directory=_FRONTEND_DIR, html=True), name="root")

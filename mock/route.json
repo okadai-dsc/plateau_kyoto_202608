@@ -57,7 +57,7 @@
           "count": 4,
           "to_street": "ew-07",
           "to_street_name": "8通",
-          "instruction": "京都タワーを背にして、4本上ル（8通まで）",
+          "instruction": "4本上ル（8通まで）",
           "tower_visible": false,
           "tower_bearing": "南西"
         }
