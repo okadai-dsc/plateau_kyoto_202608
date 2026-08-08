@@ -1,0 +1,404 @@
+{
+  "ns_streets": [
+    {
+      "id": "ns-00",
+      "axis": "ns",
+      "index": 0,
+      "name": "A通"
+    },
+    {
+      "id": "ns-01",
+      "axis": "ns",
+      "index": 1,
+      "name": "B通"
+    },
+    {
+      "id": "ns-02",
+      "axis": "ns",
+      "index": 2,
+      "name": "C通"
+    },
+    {
+      "id": "ns-03",
+      "axis": "ns",
+      "index": 3,
+      "name": "D通"
+    },
+    {
+      "id": "ns-04",
+      "axis": "ns",
+      "index": 4,
+      "name": "E通"
+    },
+    {
+      "id": "ns-05",
+      "axis": "ns",
+      "index": 5,
+      "name": "F通"
+    },
+    {
+      "id": "ns-06",
+      "axis": "ns",
+      "index": 6,
+      "name": "G通"
+    },
+    {
+      "id": "ns-07",
+      "axis": "ns",
+      "index": 7,
+      "name": "H通"
+    },
+    {
+      "id": "ns-08",
+      "axis": "ns",
+      "index": 8,
+      "name": "I通"
+    },
+    {
+      "id": "ns-09",
+      "axis": "ns",
+      "index": 9,
+      "name": "J通"
+    },
+    {
+      "id": "ns-10",
+      "axis": "ns",
+      "index": 10,
+      "name": "K通"
+    },
+    {
+      "id": "ns-11",
+      "axis": "ns",
+      "index": 11,
+      "name": "L通"
+    }
+  ],
+  "ew_streets": [
+    {
+      "id": "ew-00",
+      "axis": "ew",
+      "index": 0,
+      "name": "1通"
+    },
+    {
+      "id": "ew-01",
+      "axis": "ew",
+      "index": 1,
+      "name": "2通"
+    },
+    {
+      "id": "ew-02",
+      "axis": "ew",
+      "index": 2,
+      "name": "3通"
+    },
+    {
+      "id": "ew-03",
+      "axis": "ew",
+      "index": 3,
+      "name": "4通"
+    },
+    {
+      "id": "ew-04",
+      "axis": "ew",
+      "index": 4,
+      "name": "5通"
+    },
+    {
+      "id": "ew-05",
+      "axis": "ew",
+      "index": 5,
+      "name": "6通"
+    },
+    {
+      "id": "ew-06",
+      "axis": "ew",
+      "index": 6,
+      "name": "7通"
+    },
+    {
+      "id": "ew-07",
+      "axis": "ew",
+      "index": 7,
+      "name": "8通"
+    },
+    {
+      "id": "ew-08",
+      "axis": "ew",
+      "index": 8,
+      "name": "9通"
+    },
+    {
+      "id": "ew-09",
+      "axis": "ew",
+      "index": 9,
+      "name": "10通"
+    },
+    {
+      "id": "ew-10",
+      "axis": "ew",
+      "index": 10,
+      "name": "11通"
+    },
+    {
+      "id": "ew-11",
+      "axis": "ew",
+      "index": 11,
+      "name": "12通"
+    },
+    {
+      "id": "ew-12",
+      "axis": "ew",
+      "index": 12,
+      "name": "13通"
+    },
+    {
+      "id": "ew-13",
+      "axis": "ew",
+      "index": 13,
+      "name": "14通"
+    },
+    {
+      "id": "ew-14",
+      "axis": "ew",
+      "index": 14,
+      "name": "15通"
+    },
+    {
+      "id": "ew-15",
+      "axis": "ew",
+      "index": 15,
+      "name": "16通"
+    }
+  ],
+  "exists": [
+    [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false,
+      true
+    ],
+    [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false,
+      true
+    ],
+    [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false,
+      true
+    ],
+    [
+      true,
+      true,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ],
+    [
+      true,
+      true,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ],
+    [
+      true,
+      true,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ],
+    [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false,
+      false,
+      false
+    ],
+    [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ],
+    [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ],
+    [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ],
+    [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ],
+    [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ],
+    [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ],
+    [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ],
+    [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ],
+    [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ]
+  ],
+  "tower": {
+    "ns": "ns-05",
+    "ew": "ew-15"
+  }
+}

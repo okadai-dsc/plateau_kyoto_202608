@@ -1,0 +1,67 @@
+{
+  "from": {
+    "ns": "ns-05",
+    "ew": "ew-11"
+  },
+  "to": {
+    "ns": "ns-02",
+    "ew": "ew-07"
+  },
+  "start": {
+    "tower_visible": true,
+    "tower_bearing": "南",
+    "hint": "京都タワーが南に見えます。"
+  },
+  "routes": [
+    {
+      "id": "r1",
+      "visible_ratio": 0.88,
+      "turns": 1,
+      "steps": [
+        {
+          "direction": "上ル",
+          "count": 4,
+          "to_street": "ew-07",
+          "to_street_name": "8通",
+          "instruction": "京都タワーを背にして、4本上ル（8通まで）",
+          "tower_visible": true,
+          "tower_bearing": "南"
+        },
+        {
+          "direction": "東入ル",
+          "count": 3,
+          "to_street": "ns-02",
+          "to_street_name": "C通",
+          "instruction": "京都タワーを右手に見て、3本東入ル（C通まで）",
+          "tower_visible": true,
+          "tower_bearing": "南"
+        }
+      ]
+    },
+    {
+      "id": "r2",
+      "visible_ratio": 0.12,
+      "turns": 1,
+      "steps": [
+        {
+          "direction": "東入ル",
+          "count": 3,
+          "to_street": "ns-02",
+          "to_street_name": "C通",
+          "instruction": "京都タワーを右手に見て、3本東入ル（C通まで）",
+          "tower_visible": true,
+          "tower_bearing": "南"
+        },
+        {
+          "direction": "上ル",
+          "count": 4,
+          "to_street": "ew-07",
+          "to_street_name": "8通",
+          "instruction": "京都タワーを背にして、4本上ル（8通まで）",
+          "tower_visible": false,
+          "tower_bearing": "南西"
+        }
+      ]
+    }
+  ]
+}

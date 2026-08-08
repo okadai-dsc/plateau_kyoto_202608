@@ -11,8 +11,9 @@ venv/
 .env.*
 !.env.example
 
-# Data (大容量ファイルはGit管理外)
-data/
+# Data (大容量の地理データはGit管理外。ルート直下の data/ のみ対象)
+# 注: backend/app/data/ は管理対象なので先頭スラッシュ必須
+/data/
 *.gml
 *.citygml
 *.gpkg

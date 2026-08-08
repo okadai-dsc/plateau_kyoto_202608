@@ -1,0 +1,122 @@
+{
+  "ns": [
+    {
+      "index": 0,
+      "name": "A通"
+    },
+    {
+      "index": 1,
+      "name": "B通"
+    },
+    {
+      "index": 2,
+      "name": "C通"
+    },
+    {
+      "index": 3,
+      "name": "D通"
+    },
+    {
+      "index": 4,
+      "name": "E通"
+    },
+    {
+      "index": 5,
+      "name": "F通"
+    },
+    {
+      "index": 6,
+      "name": "G通"
+    },
+    {
+      "index": 7,
+      "name": "H通"
+    },
+    {
+      "index": 8,
+      "name": "I通"
+    },
+    {
+      "index": 9,
+      "name": "J通"
+    },
+    {
+      "index": 10,
+      "name": "K通"
+    },
+    {
+      "index": 11,
+      "name": "L通"
+    }
+  ],
+  "ew": [
+    {
+      "index": 0,
+      "name": "1通"
+    },
+    {
+      "index": 1,
+      "name": "2通"
+    },
+    {
+      "index": 2,
+      "name": "3通"
+    },
+    {
+      "index": 3,
+      "name": "4通"
+    },
+    {
+      "index": 4,
+      "name": "5通"
+    },
+    {
+      "index": 5,
+      "name": "6通"
+    },
+    {
+      "index": 6,
+      "name": "7通"
+    },
+    {
+      "index": 7,
+      "name": "8通"
+    },
+    {
+      "index": 8,
+      "name": "9通"
+    },
+    {
+      "index": 9,
+      "name": "10通"
+    },
+    {
+      "index": 10,
+      "name": "11通"
+    },
+    {
+      "index": 11,
+      "name": "12通"
+    },
+    {
+      "index": 12,
+      "name": "13通"
+    },
+    {
+      "index": 13,
+      "name": "14通"
+    },
+    {
+      "index": 14,
+      "name": "15通"
+    },
+    {
+      "index": 15,
+      "name": "16通"
+    }
+  ],
+  "tower": {
+    "ns": 5,
+    "ew": 15
+  }
+}
