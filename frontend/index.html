@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kyoter — 地図を見ずに、目的地まで</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><g stroke='rgb(28,74,90)' stroke-width='1.4' fill='none'><path d='M5 0v16M11 0v16M0 5h16M0 11h16'/></g></svg>">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="app-header">
+  <h1 class="app-title">Kyoter</h1>
+  <p class="app-tagline">地図を見ずに、目的地まで。</p>
+  <p id="mock-badge" class="mock-badge" hidden>モックデータで表示しています</p>
+</header>
+
+<p id="error-banner" class="error-banner" role="alert" hidden></p>
+
+<main class="app-main">
+
+  <!-- 1. 現在地の入力（docs/FRONTEND.md 4.1） -->
+  <section id="screen-start" class="screen" hidden>
+    <h2 class="screen-title">いま、どの交差点にいますか</h2>
+    <p class="screen-lead">
+      いちばん近い交差点まで歩いて、通りの名前を見てください。
+    </p>
+    <div id="start-selector"></div>
+    <div class="actions">
+      <button type="button" id="btn-start-confirm" class="btn btn-primary" disabled>決定</button>
+    </div>
+  </section>
+
+  <!-- 2. 目的地の選択（docs/FRONTEND.md 4.2） -->
+  <section id="screen-destination" class="screen" hidden>
+    <h2 class="screen-title">どこへ行きますか</h2>
+    <dl class="summary">
+      <div><dt>現在地</dt><dd id="destination-current">—</dd></div>
+      <div><dt>目的地</dt><dd id="destination-selected">—</dd></div>
+    </dl>
+    <div id="grid-container"></div>
+    <div class="actions">
+      <button type="button" id="btn-dest-back" class="btn">戻る</button>
+      <button type="button" id="btn-dest-confirm" class="btn btn-primary" disabled>この交差点へ</button>
+    </div>
+  </section>
+
+  <!-- 3. 経路の指示（最重要画面・docs/FRONTEND.md 4.3） -->
+  <section id="screen-route" class="screen" hidden>
+    <p class="route-heading">
+      <span id="route-from">—</span>
+      <span class="route-arrow" aria-hidden="true">→</span>
+      <span id="route-to">—</span>
+    </p>
+
+    <p id="route-hint" class="route-hint"></p>
+
+    <div id="route-tabs" class="route-tabs" hidden></div>
+
+    <ol id="route-steps" class="steps"></ol>
+
+    <div class="actions actions-stack">
+      <button type="button" id="btn-walk" class="btn btn-primary btn-block">覚えた。歩きます</button>
+      <button type="button" id="btn-route-back" class="btn">目的地を選び直す</button>
+      <button type="button" id="btn-giveup" class="btn btn-quiet">ギブアップ</button>
+    </div>
+
+    <div id="giveup-panel" class="giveup-panel" hidden>
+      <p class="giveup-title">地図を見ると、観光客に戻ります。</p>
+      <p class="giveup-body">目的地は <strong id="giveup-destination">—</strong> です。</p>
+      <button type="button" id="btn-giveup-close" class="btn">閉じる</button>
+    </div>
+  </section>
+
+  <!-- 4. 到着の入力と講評（優先度低・docs/FRONTEND.md 4.4） -->
+  <section id="screen-arrival" class="screen" hidden>
+    <h2 class="screen-title">どの交差点に着きましたか</h2>
+    <p class="screen-lead">目的地は <strong id="arrival-target">—</strong> でした。</p>
+    <div id="arrival-selector"></div>
+    <div class="actions">
+      <button type="button" id="btn-arrival-check" class="btn btn-primary" disabled>答え合わせ</button>
+    </div>
+    <div id="arrival-result" class="arrival-result" hidden></div>
+    <div class="actions">
+      <button type="button" id="btn-restart" class="btn">もう一度</button>
+    </div>
+  </section>
+
+</main>
+
+<!-- 歩行中。画面を見せない（docs/FRONTEND.md 1.2） -->
+<div id="overlay-walk" class="overlay-walk" hidden>
+  <p class="walk-message">スマホをしまって、<br>歩いてください。</p>
+  <div class="walk-actions">
+    <button type="button" id="btn-arrived" class="btn btn-primary">着きました</button>
+    <button type="button" id="btn-peek" class="btn btn-quiet">どうしても思い出せない</button>
+  </div>
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/selector.js"></script>
+<script src="js/grid.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
