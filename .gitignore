@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.ipynb_checkpoints/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Data (大容量ファイルはGit管理外)
+data/
+*.gml
+*.citygml
+*.gpkg
+*.shp
+*.zip
+
+# Output
+output/
+*.log
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
