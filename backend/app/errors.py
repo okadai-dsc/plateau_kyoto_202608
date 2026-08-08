@@ -27,3 +27,13 @@ class SameLocation(KyoterError):
 class RouteNotFound(KyoterError):
     def __init__(self) -> None:
         super().__init__("ROUTE_NOT_FOUND", "通れる経路が見つかりません")
+
+
+class DestinationResolveError(KyoterError):
+    def __init__(self, message: str = "Google Mapsリンクから座標を読み取れませんでした") -> None:
+        super().__init__("DESTINATION_RESOLVE_FAILED", message)
+
+
+class DestinationOutOfRange(KyoterError):
+    def __init__(self) -> None:
+        super().__init__("DESTINATION_OUT_OF_RANGE", "Kyoterが案内できる範囲の外です")

@@ -46,3 +46,16 @@ def test_post_route_returns_contract_error_shape():
 
     assert response.status_code == 400
     assert response.json().keys() == {"error", "message"}
+
+
+def test_resolve_destination_returns_nearest_intersection():
+    client = TestClient(app)
+    response = client.post(
+        "/api/resolve-destination",
+        json={"url": "https://www.google.com/maps/@35.003678,135.759637,17z"},
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["destination"] == {"ns": "ns-12", "ew": "ew-12"}
+    assert data["label"] == "烏丸通 × 四条通 付近"
