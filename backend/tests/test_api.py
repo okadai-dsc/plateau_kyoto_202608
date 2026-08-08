@@ -16,25 +16,22 @@ def test_get_grid_matches_mock(repo_root):
     assert response.json() == mock_grid
 
 
-def test_post_route_matches_mock_response_shape(repo_root):
+def test_post_route_matches_mock_response(repo_root):
+    """モックと同じ入力なら、同じレスポンスを返すこと。
+
+    通り名や本数を直接書かない。実データに差し替えても、
+    mock/route.json を再生成すればそのまま通る。
+    """
+    mock_route = json.loads((repo_root / "mock" / "route.json").read_text(encoding="utf-8"))
+
     client = TestClient(app)
     response = client.post(
         "/api/route",
-        json={
-            "from": {"ns": "ns-05", "ew": "ew-11"},
-            "to": {"ns": "ns-02", "ew": "ew-07"},
-        },
+        json={"from": mock_route["from"], "to": mock_route["to"]},
     )
-    mock_route = json.loads((repo_root / "mock" / "route.json").read_text(encoding="utf-8"))
 
     assert response.status_code == 200
-    body = response.json()
-    assert body.keys() == mock_route.keys()
-    assert body["start"].keys() == mock_route["start"].keys()
-    assert body["routes"][0].keys() == mock_route["routes"][0].keys()
-    assert body["routes"][0]["steps"][0].keys() == mock_route["routes"][0]["steps"][0].keys()
-    assert body["routes"][0]["visible_ratio"] == 0.88
-    assert body["routes"][1]["visible_ratio"] == 0.12
+    assert response.json() == mock_route
 
 
 def test_post_route_returns_contract_error_shape():

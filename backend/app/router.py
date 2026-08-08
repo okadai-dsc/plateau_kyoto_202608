@@ -129,6 +129,8 @@ class RouteService:
                 return None
 
             points.extend(traversed)
+            # 「N本」は添字の差ではなく、実際に横切る通りの本数
+            crossed = len(traversed)
             current_ns = target_ns
             current_ew = target_ew
             to_axis = movement.axis
@@ -140,12 +142,12 @@ class RouteService:
             steps.append(
                 {
                     "direction": movement.direction,
-                    "count": movement.count,
+                    "count": crossed,
                     "to_street": self.grid.street_id(to_axis, to_index),
                     "to_street_name": to_street_name,
                     "instruction": build_instruction(
                         movement.direction,
-                        movement.count,
+                        crossed,
                         to_street_name,
                         start_visible,
                         start_bearing,
@@ -189,19 +191,31 @@ class RouteService:
         target_ew: int,
         axis: Axis,
     ) -> list[tuple[int, int]] | None:
+        """区間を進むあいだに実際に横切る交差点を返す。
+
+        交差点が無い場所は「相手の通りがそこまで届いていない」だけで、
+        その通りを歩くこと自体は妨げられない（横切る通りが1本減るだけ）。
+        たとえば河原町通を四条から三条へ上がるとき、
+        錦小路通は河原町通まで届いていないが、河原町通は普通に歩ける。
+
+        ただし**区間の終点は実在しなければならない**。
+        そこで曲がる（あるいは到着する）ため。
+        """
         traversed: list[tuple[int, int]] = []
         if axis == "ew":
+            if not self.grid.exists_indices(current_ns, target_ew):
+                return None
             step = 1 if target_ew > current_ew else -1
             for ew_index in range(current_ew + step, target_ew + step, step):
-                if not self.grid.exists_indices(current_ns, ew_index):
-                    return None
-                traversed.append((current_ns, ew_index))
+                if self.grid.exists_indices(current_ns, ew_index):
+                    traversed.append((current_ns, ew_index))
         else:
+            if not self.grid.exists_indices(target_ns, current_ew):
+                return None
             step = 1 if target_ns > current_ns else -1
             for ns_index in range(current_ns + step, target_ns + step, step):
-                if not self.grid.exists_indices(ns_index, current_ew):
-                    return None
-                traversed.append((ns_index, current_ew))
+                if self.grid.exists_indices(ns_index, current_ew):
+                    traversed.append((ns_index, current_ew))
         return traversed
 
     def _turn_count(self, steps: list[dict[str, Any]]) -> int:

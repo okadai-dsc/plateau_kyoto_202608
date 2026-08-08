@@ -17,6 +17,9 @@
   --absent: #eeeae4;
   --warn: #8a5a20;
   --warn-soft: #f7efe2;
+  --major-line: #c9c0b2;
+  --spot: #7a5c86;
+  --spot-soft: #f1ecf4;
   --radius: 10px;
 }
 
@@ -32,6 +35,9 @@
     --absent: #262320;
     --warn: #d9ae74;
     --warn-soft: #33291c;
+    --major-line: #4b463f;
+    --spot: #b79ac4;
+    --spot-soft: #2b2430;
   }
 }
 
@@ -281,15 +287,62 @@ table.grid {
   border-right: 1px solid var(--line);
 }
 
+/*
+ * マスの大きさは街区の実際の広さから、罫線の太さは通りの実際の幅から
+ * JavaScript が算出して指定する（frontend/js/grid.js）。
+ * ここでは下限だけ決めておく。
+ */
 .grid-cell {
-  width: 2.5rem;
-  min-width: 2.5rem;
-  height: 2.5rem;
+  min-width: 1.4rem;
   padding: 2px;
 }
 
-.grid thead th.grid-head-col { min-width: 2.5rem; }
-.grid tbody th.grid-head-row { min-width: 3.5rem; }
+.grid thead th.grid-head-col { min-width: 3.4rem; }
+.grid tbody th.grid-head-row { min-width: 4.2rem; }
+.grid col.grid-col-head { width: 4.2rem; }
+
+/* 主要な通りは見出しを濃くする */
+.grid th.is-major {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+/* ── 観光地 ─────────────────────────────────────────────── */
+.spot-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0 0 0.9rem;
+}
+
+.spot-chip {
+  padding: 0.35rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink-muted);
+  font: inherit;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.spot-chip:hover { border-color: var(--spot); color: var(--ink); }
+
+.spot-chip.is-active {
+  border-color: var(--spot);
+  background: var(--spot-soft);
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* 敷地の広がりを淡く塗る（御所・二条城・京都駅など） */
+.grid-cell.is-spot-area { background: var(--spot-soft); }
+
+.grid-button.is-spot {
+  border-color: var(--spot);
+  color: var(--spot);
+  font-size: 0.6rem;
+}
 
 .grid-cell.is-absent {
   background:
@@ -365,6 +418,7 @@ table.grid {
 .legend-swatch.is-current { background: var(--ink); border-color: var(--ink); color: var(--bg); }
 .legend-swatch.is-selected { background: var(--accent); border-color: var(--accent); color: #fff; }
 .legend-swatch.is-tower { border-color: var(--warn); color: var(--warn); }
+.legend-swatch.is-spot { border-color: var(--spot); color: var(--spot); font-size: 0.55rem; }
 .legend-swatch.is-absent {
   background:
     repeating-linear-gradient(45deg,
