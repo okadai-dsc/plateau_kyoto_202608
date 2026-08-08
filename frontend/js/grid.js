@@ -5,6 +5,8 @@
  * 地図ライブラリは使わない。座標も持たない（docs/SPEC.md 4.5）。
  *
  * 行 = ew（横の通り）、列 = ns（縦の通り）。docs/API.md 3.1 の exists と同じ向き。
+ *
+ * 現在地は同じ画面のセレクタで随時変わるため、setCurrent() で後から差し替えられる。
  */
 const GridView = (() => {
 
@@ -12,23 +14,26 @@ const GridView = (() => {
    * @param {HTMLElement} root  描画先
    * @param {object} grid       GET /api/grid のレスポンス
    * @param {object} [options]
-   * @param {{ns: string, ew: string} | null} [options.current]  現在地
-   * @param {(intersection: {ns: string, ew: string}) => void} [options.onSelect]
+   * @param {(intersection: {ns: string, ew: string} | null) => void} [options.onSelect]
+   *        目的地が変わったときに呼ばれる。解除されたときは null
    */
   function create(root, grid, options = {}) {
-    const { current, onSelect } = options;
+    const { onSelect } = options;
     const towerNs = grid.tower ? Api.indexOf(grid.tower.ns) : null;
     const towerEw = grid.tower ? Api.indexOf(grid.tower.ew) : null;
 
-    let selected = null;
+    let selected = null;   // {nsIndex, ewIndex}
+    let current = null;    // {nsIndex, ewIndex}
     const cellByKey = new Map();
     const key = (nsIndex, ewIndex) => `${nsIndex}:${ewIndex}`;
 
     const exists = (nsIndex, ewIndex) => Boolean(grid.exists?.[ewIndex]?.[nsIndex]);
-    const isCurrent = (nsIndex, ewIndex) =>
-      Boolean(current) &&
-      Api.indexOf(current.ns) === nsIndex &&
-      Api.indexOf(current.ew) === ewIndex;
+    const cellAt = (position) => (position ? cellByKey.get(key(position.nsIndex, position.ewIndex)) : null);
+    const same = (a, b) => Boolean(a && b && a.nsIndex === b.nsIndex && a.ewIndex === b.ewIndex);
+    const toIntersection = ({ nsIndex, ewIndex }) => ({
+      ns: grid.ns_streets[nsIndex].id,
+      ew: grid.ew_streets[ewIndex].id,
+    });
 
     // ── 表の組み立て。本数はデータから取る（ハードコードしない） ──
     const table = document.createElement('table');
@@ -67,14 +72,12 @@ const GridView = (() => {
         const nsIndex = nsStreet.index;
         const td = document.createElement('td');
         td.className = 'grid-cell';
-
         const label = `${nsStreet.name} × ${ewStreet.name}`;
 
         if (!exists(nsIndex, ewIndex)) {
           // 存在しない交差点。押せないことが見て分かるようにする
           td.classList.add('is-absent');
           td.setAttribute('aria-label', `${label}（交差点なし）`);
-          td.textContent = '';
           tr.appendChild(td);
           continue;
         }
@@ -84,21 +87,20 @@ const GridView = (() => {
         button.className = 'grid-button';
         button.dataset.ns = nsStreet.id;
         button.dataset.ew = ewStreet.id;
+        button.dataset.label = label;
 
-        if (towerNs === nsIndex && towerEw === ewIndex) {
+        // 現在地や目的地の表示を外したときに戻す既定の見た目
+        const isTower = towerNs === nsIndex && towerEw === ewIndex;
+        button.dataset.baseText = isTower ? '塔' : '';
+        if (isTower) {
           button.classList.add('is-tower');
-          button.textContent = '塔';
           button.setAttribute('aria-label', `${label}（京都タワー）`);
-        } else if (isCurrent(nsIndex, ewIndex)) {
-          button.classList.add('is-current');
-          button.disabled = true;
-          button.textContent = '今';
-          button.setAttribute('aria-label', `${label}（現在地）`);
         } else {
           button.setAttribute('aria-label', label);
         }
+        button.textContent = button.dataset.baseText;
 
-        button.addEventListener('click', () => select(nsIndex, ewIndex));
+        button.addEventListener('click', () => selectDestination({ nsIndex, ewIndex }));
         td.appendChild(button);
         cellByKey.set(key(nsIndex, ewIndex), button);
         tr.appendChild(td);
@@ -125,35 +127,80 @@ const GridView = (() => {
     root.appendChild(scroll);
     root.appendChild(legend);
 
-    function select(nsIndex, ewIndex) {
-      if (selected) {
-        const previous = cellByKey.get(key(selected.nsIndex, selected.ewIndex));
-        if (previous) {
-          previous.classList.remove('is-selected');
-          if (!previous.classList.contains('is-tower')) previous.textContent = '';
-        }
-      }
-      selected = { nsIndex, ewIndex };
-      const button = cellByKey.get(key(nsIndex, ewIndex));
+    /** 現在地・目的地の装飾を外して既定の見た目に戻す */
+    function resetCell(position) {
+      const button = cellAt(position);
+      if (!button) return;
+      button.classList.remove('is-current', 'is-selected');
+      button.disabled = false;
+      button.textContent = button.dataset.baseText;
+      button.setAttribute('aria-label',
+        button.dataset.label + (button.dataset.baseText ? '（京都タワー）' : ''));
+    }
+
+    function clearDestination(notify = true) {
+      if (!selected) return;
+      resetCell(selected);
+      selected = null;
+      if (notify && onSelect) onSelect(null);
+    }
+
+    function selectDestination(position) {
+      if (same(position, current)) return;      // 現在地は目的地にできない
+      if (same(position, selected)) return;
+      clearDestination(false);
+
+      selected = position;
+      const button = cellAt(position);
       button.classList.add('is-selected');
       button.textContent = '★';
+      button.setAttribute('aria-label', `${button.dataset.label}（目的地）`);
 
-      if (onSelect) {
-        onSelect({
-          ns: grid.ns_streets[nsIndex].id,
-          ew: grid.ew_streets[ewIndex].id,
-        });
-      }
+      if (onSelect) onSelect(toIntersection(position));
+    }
+
+    /** 現在地を差し替える。セレクタの変更に追従させるために使う */
+    function setCurrent(intersection) {
+      if (current) resetCell(current);
+      current = null;
+      if (!intersection) return;
+
+      const position = {
+        nsIndex: Api.indexOf(intersection.ns),
+        ewIndex: Api.indexOf(intersection.ew),
+      };
+      const button = cellAt(position);
+      if (!button) return;
+
+      // 目的地と重なったら目的地を解除する
+      if (same(position, selected)) clearDestination();
+
+      current = position;
+      button.classList.add('is-current');
+      button.disabled = true;
+      button.textContent = '今';
+      button.setAttribute('aria-label', `${button.dataset.label}（現在地）`);
+      scrollIntoGrid(button);
+    }
+
+    /**
+     * 現在地をグリッドの中央に寄せる。
+     *
+     * scrollIntoView() は親要素も巻き込んでページ全体をスクロールさせ、
+     * 同じ画面の上にあるセレクタが視界から外れてしまう。
+     * そのためスクロールコンテナだけを動かす。
+     */
+    function scrollIntoGrid(button) {
+      const container = scroll.getBoundingClientRect();
+      const target = button.getBoundingClientRect();
+      scroll.scrollLeft += (target.left - container.left) - (container.width - target.width) / 2;
+      scroll.scrollTop += (target.top - container.top) - (container.height - target.height) / 2;
     }
 
     return {
-      getSelected() {
-        if (!selected) return null;
-        return {
-          ns: grid.ns_streets[selected.nsIndex].id,
-          ew: grid.ew_streets[selected.ewIndex].id,
-        };
-      },
+      setCurrent,
+      clearDestination,
+      getSelected: () => (selected ? toIntersection(selected) : null),
     };
   }
 

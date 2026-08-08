@@ -61,23 +61,8 @@ const Api = (() => {
       : postJSON(`${API_BASE}/route`, { from, to });
   }
 
-  /**
-   * 到着した交差点と目的地のズレを講評する（優先度低・docs/API.md 3.3）。
-   *
-   * 講評文（comment）はバックエンドが生成する。
-   * モックでは数値のズレだけ返し、comment は null にしておく。
-   */
-  async function postArrival(target, actual) {
-    if (!USE_MOCK) return postJSON(`${API_BASE}/arrival`, { target, actual });
+  // 到着の答え合わせ（POST /api/arrival）は v1 では使わない。
+  // バックエンドには実装が残っているが、画面からは呼ばない。
 
-    const offNs = indexOf(actual.ns) - indexOf(target.ns);
-    const offEw = indexOf(actual.ew) - indexOf(target.ew);
-    return {
-      correct: offNs === 0 && offEw === 0,
-      off_by: { ns: offNs, ew: offEw },
-      comment: null,
-    };
-  }
-
-  return { isMock: USE_MOCK, getGrid, postRoute, postArrival, indexOf };
+  return { isMock: USE_MOCK, getGrid, postRoute, indexOf };
 })();

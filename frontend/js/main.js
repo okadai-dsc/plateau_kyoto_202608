@@ -13,7 +13,7 @@ const App = (() => {
     route: null,     // POST /api/route のレスポンス
     routeIndex: 0,
     startSelector: null,
-    arrivalSelector: null,
+    gridView: null,
   };
 
   const $ = (selector) => document.querySelector(selector);
@@ -43,43 +43,40 @@ const App = (() => {
     banner.hidden = !message;
   }
 
-  // ── 1. 現在地の入力 ─────────────────────────────────────────
+  // ── 1. 現在地と目的地を1画面で指定する ──────────────────────
   function setupStartScreen() {
-    state.startSelector = IntersectionSelector.create($('#start-selector'), state.grid, {
-      onChange(value) {
-        $('#btn-start-confirm').disabled = !value;
-      },
-    });
-
-    $('#btn-start-confirm').addEventListener('click', () => {
-      state.from = state.startSelector.getValue();
-      if (!state.from) return;
-      setupDestinationScreen();
-      showScreen('destination');
-    });
-  }
-
-  // ── 2. 目的地の選択（グリッドUI） ───────────────────────────
-  function setupDestinationScreen() {
-    $('#destination-current').textContent = intersectionLabel(state.from);
-    $('#btn-dest-confirm').disabled = true;
-    state.to = null;
-
-    GridView.create($('#grid-container'), state.grid, {
-      current: state.from,
+    // 現在地はセレクタ、目的地はグリッド。同じ画面に並べる
+    state.gridView = GridView.create($('#grid-container'), state.grid, {
       onSelect(intersection) {
         state.to = intersection;
-        $('#destination-selected').textContent = intersectionLabel(intersection);
-        $('#btn-dest-confirm').disabled = false;
+        updateSummary();
       },
     });
-    $('#destination-selected').textContent = '—';
+
+    state.startSelector = IntersectionSelector.create($('#start-selector'), state.grid, {
+      onChange(value) {
+        state.from = value;
+        // グリッドの現在地マーカーをセレクタに追従させる
+        state.gridView.setCurrent(value);
+        state.to = state.gridView.getSelected();
+        updateSummary();
+      },
+    });
+
+    updateSummary();
+    $('#btn-go').addEventListener('click', requestRoute);
+  }
+
+  function updateSummary() {
+    $('#summary-current').textContent = intersectionLabel(state.from);
+    $('#summary-destination').textContent = intersectionLabel(state.to);
+    $('#btn-go').disabled = !(state.from && state.to);
   }
 
   async function requestRoute() {
     if (!state.from || !state.to) return;
     showError('');
-    $('#btn-dest-confirm').disabled = true;
+    $('#btn-go').disabled = true;
     try {
       state.route = await Api.postRoute(state.from, state.to);
       state.routeIndex = 0;
@@ -88,7 +85,7 @@ const App = (() => {
     } catch (error) {
       showError(error.message);
     } finally {
-      $('#btn-dest-confirm').disabled = false;
+      $('#btn-go').disabled = false;
     }
   }
 
@@ -177,70 +174,24 @@ const App = (() => {
     document.body.classList.remove('is-walking');
   }
 
-  // ── 4. 到着の入力と講評（優先度低） ─────────────────────────
-  function setupArrivalScreen() {
-    $('#arrival-target').textContent = intersectionLabel(state.route.to);
-    $('#arrival-result').hidden = true;
-
-    if (!state.arrivalSelector) {
-      state.arrivalSelector = IntersectionSelector.create($('#arrival-selector'), state.grid, {
-        onChange(value) {
-          $('#btn-arrival-check').disabled = !value;
-        },
-      });
-    } else {
-      state.arrivalSelector.reset();
-    }
-    $('#btn-arrival-check').disabled = true;
-  }
-
-  async function checkArrival() {
-    const actual = state.arrivalSelector.getValue();
-    if (!actual) return;
+  /** 一連の流れを終えて最初に戻る */
+  function restart() {
+    state.route = null;
+    state.gridView.clearDestination();
+    state.startSelector.reset();   // onChange 経由で state.from / state.to も戻る
     showError('');
-    try {
-      const result = await Api.postArrival(state.route.to, actual);
-      renderArrivalResult(result);
-    } catch (error) {
-      showError(error.message);
-    }
-  }
-
-  function renderArrivalResult(result) {
-    const box = $('#arrival-result');
-    box.hidden = false;
-    box.classList.toggle('is-correct', result.correct);
-
-    const headline = result.correct ? '着いてはります。' : 'すこし ずれてはります。';
-    const gaps = [];
-    if (result.off_by.ew) {
-      gaps.push(`${Math.abs(result.off_by.ew)}本 ${result.off_by.ew > 0 ? '下' : '上'}`);
-    }
-    if (result.off_by.ns) {
-      gaps.push(`${Math.abs(result.off_by.ns)}本 ${result.off_by.ns > 0 ? '西' : '東'}`);
-    }
-
-    // 講評文（comment）はバックエンドが生成する。未接続時は数値のズレだけ出す
-    box.innerHTML = `
-      <p class="arrival-headline">${headline}</p>
-      ${gaps.length ? `<p class="arrival-gap">ずれ: ${gaps.join(' / ')}</p>` : ''}
-      <p class="arrival-comment">${result.comment ?? '（講評はバックエンド接続後に表示されます）'}</p>
-    `;
+    showScreen('start');
   }
 
   // ── 起動 ────────────────────────────────────────────────────
   function bindNavigation() {
-    $('#btn-dest-back').addEventListener('click', () => showScreen('start'));
-    $('#btn-dest-confirm').addEventListener('click', requestRoute);
-
-    $('#btn-route-back').addEventListener('click', () => showScreen('destination'));
+    $('#btn-route-back').addEventListener('click', () => showScreen('start'));
     $('#btn-walk').addEventListener('click', startWalking);
 
     $('#btn-peek').addEventListener('click', stopWalking);
     $('#btn-arrived').addEventListener('click', () => {
       stopWalking();
-      setupArrivalScreen();
-      showScreen('arrival');
+      restart();
     });
 
     $('#btn-giveup').addEventListener('click', () => {
@@ -249,15 +200,6 @@ const App = (() => {
     });
     $('#btn-giveup-close').addEventListener('click', () => {
       $('#giveup-panel').hidden = true;
-    });
-
-    $('#btn-arrival-check').addEventListener('click', checkArrival);
-    $('#btn-restart').addEventListener('click', () => {
-      state.from = null;
-      state.to = null;
-      state.route = null;
-      state.startSelector.reset();
-      showScreen('start');
     });
   }
 

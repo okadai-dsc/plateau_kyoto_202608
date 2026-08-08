@@ -19,29 +19,28 @@
 
 <main class="app-main">
 
-  <!-- 1. 現在地の入力（docs/FRONTEND.md 4.1） -->
+  <!-- 1. 現在地と目的地を1画面で指定する（docs/FRONTEND.md 4.1 / 4.2） -->
   <section id="screen-start" class="screen" hidden>
-    <h2 class="screen-title">いま、どの交差点にいますか</h2>
-    <p class="screen-lead">
-      いちばん近い交差点まで歩いて、通りの名前を見てください。
-    </p>
-    <div id="start-selector"></div>
-    <div class="actions">
-      <button type="button" id="btn-start-confirm" class="btn btn-primary" disabled>決定</button>
-    </div>
-  </section>
 
-  <!-- 2. 目的地の選択（docs/FRONTEND.md 4.2） -->
-  <section id="screen-destination" class="screen" hidden>
-    <h2 class="screen-title">どこへ行きますか</h2>
-    <dl class="summary">
-      <div><dt>現在地</dt><dd id="destination-current">—</dd></div>
-      <div><dt>目的地</dt><dd id="destination-selected">—</dd></div>
-    </dl>
-    <div id="grid-container"></div>
+    <div class="block">
+      <h2 class="screen-title">いま、どの交差点にいますか</h2>
+      <p class="screen-lead">
+        いちばん近い交差点まで歩いて、通りの名前を見てください。
+      </p>
+      <div id="start-selector"></div>
+    </div>
+
+    <div class="block">
+      <h2 class="screen-title">どこへ行きますか</h2>
+      <dl class="summary">
+        <div><dt>現在地</dt><dd id="summary-current">—</dd></div>
+        <div><dt>目的地</dt><dd id="summary-destination">—</dd></div>
+      </dl>
+      <div id="grid-container"></div>
+    </div>
+
     <div class="actions">
-      <button type="button" id="btn-dest-back" class="btn">戻る</button>
-      <button type="button" id="btn-dest-confirm" class="btn btn-primary" disabled>この交差点へ</button>
+      <button type="button" id="btn-go" class="btn btn-primary btn-block" disabled>この経路をつくる</button>
     </div>
   </section>
 
@@ -61,7 +60,7 @@
 
     <div class="actions actions-stack">
       <button type="button" id="btn-walk" class="btn btn-primary btn-block">覚えた。歩きます</button>
-      <button type="button" id="btn-route-back" class="btn">目的地を選び直す</button>
+      <button type="button" id="btn-route-back" class="btn">選び直す</button>
       <button type="button" id="btn-giveup" class="btn btn-quiet">ギブアップ</button>
     </div>
 
@@ -72,27 +71,13 @@
     </div>
   </section>
 
-  <!-- 4. 到着の入力と講評（優先度低・docs/FRONTEND.md 4.4） -->
-  <section id="screen-arrival" class="screen" hidden>
-    <h2 class="screen-title">どの交差点に着きましたか</h2>
-    <p class="screen-lead">目的地は <strong id="arrival-target">—</strong> でした。</p>
-    <div id="arrival-selector"></div>
-    <div class="actions">
-      <button type="button" id="btn-arrival-check" class="btn btn-primary" disabled>答え合わせ</button>
-    </div>
-    <div id="arrival-result" class="arrival-result" hidden></div>
-    <div class="actions">
-      <button type="button" id="btn-restart" class="btn">もう一度</button>
-    </div>
-  </section>
-
 </main>
 
 <!-- 歩行中。画面を見せない（docs/FRONTEND.md 1.2） -->
 <div id="overlay-walk" class="overlay-walk" hidden>
   <p class="walk-message">スマホをしまって、<br>歩いてください。</p>
   <div class="walk-actions">
-    <button type="button" id="btn-arrived" class="btn btn-primary">着きました</button>
+    <button type="button" id="btn-arrived" class="btn btn-primary">着いた</button>
     <button type="button" id="btn-peek" class="btn btn-quiet">どうしても思い出せない</button>
   </div>
 </div>

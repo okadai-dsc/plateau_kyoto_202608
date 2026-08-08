@@ -116,6 +116,13 @@ body.is-walking { overflow: hidden; }
   font-size: 0.9rem;
 }
 
+/* 現在地の入力と目的地のグリッドを1画面に並べるための区切り */
+.block + .block {
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--line);
+}
+
 .actions {
   display: flex;
   gap: 0.75rem;
@@ -517,21 +524,6 @@ table.grid {
 }
 
 .overlay-walk .btn-quiet { color: #6f6a63; }
-
-/* ── 到着と講評 ─────────────────────────────────────────── */
-.arrival-result {
-  margin-top: 1.5rem;
-  padding: 1rem;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--surface);
-}
-
-.arrival-result.is-correct { border-color: var(--accent); }
-
-.arrival-headline { margin: 0 0 0.4rem; font-size: 1.1rem; font-weight: 600; }
-.arrival-gap { margin: 0 0 0.4rem; font-size: 0.9rem; }
-.arrival-comment { margin: 0; color: var(--ink-muted); font-size: 0.85rem; }
 
 /* ── 画面が狭いとき ─────────────────────────────────────── */
 @media (max-width: 380px) {
