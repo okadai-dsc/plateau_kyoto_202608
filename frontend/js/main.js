@@ -13,6 +13,8 @@ const App = (() => {
     route: null,     // POST /api/route のレスポンス
     startSelector: null,
     gridView: null,
+    resolvedDestination: null,
+    isApplyingResolvedDestination: false,
   };
 
   const $ = (selector) => document.querySelector(selector);
@@ -27,6 +29,10 @@ const App = (() => {
   function intersectionLabel(intersection) {
     if (!intersection) return '—';
     return `${streetName(intersection.ns)} × ${streetName(intersection.ew)}`;
+  }
+
+  function sameIntersection(a, b) {
+    return Boolean(a && b && a.ns === b.ns && a.ew === b.ew);
   }
 
   function showScreen(name) {
@@ -51,6 +57,12 @@ const App = (() => {
     state.gridView = GridView.create($('#grid-container'), state.grid, {
       onSelect(intersection) {
         state.to = intersection;
+        if (
+          !state.isApplyingResolvedDestination &&
+          !sameIntersection(intersection, state.resolvedDestination?.at)
+        ) {
+          clearResolvedDestination();
+        }
         updateDestinationState();
       },
     });
@@ -66,6 +78,7 @@ const App = (() => {
     });
 
     renderSpotChips();
+    bindDestinationResolver();
     updateStartState();
     updateDestinationState();
     $('#btn-start-next').addEventListener('click', () => {
@@ -98,6 +111,7 @@ const App = (() => {
       chip.textContent = spot.name;
       chip.title = intersectionLabel(spot.at);
       chip.addEventListener('click', () => {
+        clearResolvedDestination();
         state.gridView.selectAt(spot.at);
         highlightChip(spot.name);
       });
@@ -133,6 +147,71 @@ const App = (() => {
 
     highlightChip(spotName);
     $('#btn-go').disabled = !(state.from && state.to);
+  }
+
+  function bindDestinationResolver() {
+    const form = $('#destination-link-form');
+    const input = $('#destination-link-input');
+    const button = $('#btn-resolve-destination');
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const url = input.value.trim();
+      if (!url) {
+        setDestinationLinkStatus('Google Mapsリンクを貼ってください', 'error');
+        return;
+      }
+
+      setDestinationLinkStatus('読み取り中です');
+      button.disabled = true;
+
+      try {
+        const result = await Api.resolveDestination(url);
+        state.resolvedDestination = {
+          at: result.destination,
+          label: result.label,
+          distanceM: result.distance_m,
+        };
+
+        state.isApplyingResolvedDestination = true;
+        const selected = state.gridView.selectAt(result.destination);
+        state.isApplyingResolvedDestination = false;
+
+        if (!selected) {
+          state.resolvedDestination = null;
+          setDestinationLinkStatus('現在地と同じ場所は目的地にできません', 'error');
+          updateDestinationState();
+          return;
+        }
+
+        const distanceText = result.distance_m > 0 ? `（約${result.distance_m}m）` : '';
+        setDestinationLinkStatus(`${result.label}に合わせました${distanceText}`, 'success');
+        updateDestinationState();
+      } catch (error) {
+        state.resolvedDestination = null;
+        setDestinationLinkStatus(error.message, 'error');
+        updateDestinationState();
+      } finally {
+        state.isApplyingResolvedDestination = false;
+        button.disabled = false;
+      }
+    });
+
+    input.addEventListener('input', () => {
+      if (!input.value.trim()) clearResolvedDestination();
+    });
+  }
+
+  function setDestinationLinkStatus(message, tone = '') {
+    const status = $('#destination-link-status');
+    status.textContent = message;
+    status.classList.toggle('is-success', tone === 'success');
+    status.classList.toggle('is-error', tone === 'error');
+  }
+
+  function clearResolvedDestination() {
+    state.resolvedDestination = null;
+    setDestinationLinkStatus('');
   }
 
   async function requestRoute() {
@@ -183,6 +262,9 @@ const App = (() => {
 
   /** 目的地に観光地名があれば添える */
   function destinationLabel(intersection) {
+    if (sameIntersection(intersection, state.resolvedDestination?.at)) {
+      return state.resolvedDestination.label;
+    }
     const spot = state.gridView?.spotNameAt(intersection);
     const label = intersectionLabel(intersection);
     return spot ? `${spot}（${label}）` : label;
@@ -202,6 +284,8 @@ const App = (() => {
   /** 一連の流れを終えて最初に戻る */
   function restart() {
     state.route = null;
+    clearResolvedDestination();
+    $('#destination-link-input').value = '';
     state.gridView.clearDestination();
     state.startSelector.reset();   // onChange 経由で state.from / state.to も戻る
     showError('');
@@ -225,7 +309,7 @@ const App = (() => {
 
     $('#btn-giveup').addEventListener('click', () => {
       $('#giveup-panel').hidden = false;
-      $('#giveup-destination').textContent = intersectionLabel(state.route.to);
+      $('#giveup-destination').textContent = destinationLabel(state.route.to);
     });
     $('#btn-giveup-close').addEventListener('click', () => {
       $('#giveup-panel').hidden = true;

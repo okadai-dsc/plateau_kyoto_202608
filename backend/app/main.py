@@ -9,11 +9,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
+from .destination import DestinationResolver
 from .errors import IntersectionNotFound, KyoterError
 from .grid import Grid
 from .instruction import build_start_hint
 from .landmark import LandmarkService
-from .models import ArrivalRequest, RouteRequest
+from .models import ArrivalRequest, DestinationResolveRequest, RouteRequest
 from .router import RouteService
 
 app = FastAPI(title="Kyoter Backend")
@@ -42,6 +43,11 @@ def get_route_service() -> RouteService:
     return RouteService(get_grid(), get_landmark())
 
 
+@lru_cache
+def get_destination_resolver() -> DestinationResolver:
+    return DestinationResolver(get_grid())
+
+
 @app.exception_handler(KyoterError)
 async def kyoter_error_handler(_request: Any, exc: KyoterError) -> JSONResponse:
     return JSONResponse(
@@ -58,6 +64,11 @@ def grid() -> dict[str, Any]:
 @app.post("/api/route")
 def route(payload: RouteRequest) -> dict[str, Any]:
     return get_route_service().build_route_response(payload.from_, payload.to)
+
+
+@app.post("/api/resolve-destination")
+def resolve_destination(payload: DestinationResolveRequest) -> dict[str, Any]:
+    return get_destination_resolver().resolve(payload.url)
 
 
 @app.post("/api/arrival")

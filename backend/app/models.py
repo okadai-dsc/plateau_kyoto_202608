@@ -51,6 +51,10 @@ class RouteRequest(ApiModel):
     to: Intersection
 
 
+class DestinationResolveRequest(ApiModel):
+    url: str
+
+
 class StartInfo(ApiModel):
     tower_visible: bool
     tower_bearing: Bearing

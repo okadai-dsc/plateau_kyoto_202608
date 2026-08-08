@@ -29,6 +29,7 @@ class Grid:
         }
         self._spots: list[dict[str, Any]] = streets_data.get("spots", [])
         self._landmarks: list[dict[str, Any]] = streets_data.get("landmarks", [])
+        self._geo: dict[str, Any] = streets_data.get("geo", {})
 
         self._validate_streets()
         self._validate_matrix(self._exists, "exists")
@@ -54,6 +55,12 @@ class Grid:
     def landmarks(self) -> list[dict[str, Any]]:
         """方角を知るための目印（docs/API.md 3.2）。"""
         return [landmark.copy() for landmark in self._landmarks]
+
+    @property
+    def geo_reference(self) -> dict[str, Any] | None:
+        """緯度経度を内部のメートル座標へ寄せるための基準点。"""
+        reference = self._geo.get("reference")
+        return None if reference is None else reference.copy()
 
     def position(self, ns_index: int, ew_index: int) -> tuple[float, float]:
         """交差点の位置(m)。x = 川端通から西へ、y = 今出川通から南へ。

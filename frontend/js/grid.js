@@ -269,8 +269,8 @@ const GridView = (() => {
     }
 
     function selectDestination(position) {
-      if (same(position, current)) return;      // 現在地は目的地にできない
-      if (same(position, selected)) return;
+      if (same(position, current)) return false;      // 現在地は目的地にできない
+      if (same(position, selected)) return true;
       clearDestination(false);
 
       selected = position;
@@ -281,6 +281,7 @@ const GridView = (() => {
       scrollIntoMap(button);
 
       if (onSelect) onSelect(toIntersection(position));
+      return true;
     }
 
     /** 現在地を差し替える。セレクタの変更に追従させるために使う */
@@ -382,10 +383,12 @@ const GridView = (() => {
         nsIndex: Api.indexOf(intersection.ns),
         ewIndex: Api.indexOf(intersection.ew),
       };
-      if (!cellAt(position)) return;
-      selectDestination(position);
+      if (!cellAt(position)) return false;
+      const selected = selectDestination(position);
+      if (!selected) return false;
       cellAt(position)?.focus({ preventScroll: true });
       scrollIntoMap(cellAt(position), true);
+      return true;
     }
 
     /** その交差点にある観光地名（無ければ null） */

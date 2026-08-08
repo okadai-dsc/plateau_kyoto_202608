@@ -61,8 +61,14 @@ const Api = (() => {
       : postJSON(`${API_BASE}/route`, { from, to });
   }
 
+  /** Google Mapsリンクを、Kyoterの目的地交差点へ変換する。 */
+  async function resolveDestination(url) {
+    if (USE_MOCK) throw new Error('モックではGoogle Mapsリンクを解決できません');
+    return postJSON(`${API_BASE}/resolve-destination`, { url });
+  }
+
   // 到着の答え合わせ（POST /api/arrival）は v1 では使わない。
   // バックエンドには実装が残っているが、画面からは呼ばない。
 
-  return { isMock: USE_MOCK, getGrid, postRoute, indexOf };
+  return { isMock: USE_MOCK, getGrid, postRoute, resolveDestination, indexOf };
 })();
