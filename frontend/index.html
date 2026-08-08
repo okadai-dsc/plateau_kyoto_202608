@@ -47,6 +47,14 @@
     <div class="block">
       <h2 class="screen-title">どこへ行きますか</h2>
       <p id="summary" class="summary" hidden></p>
+      <form id="destination-link-form" class="destination-link">
+        <label class="destination-link-label" for="destination-link-input">Google Mapsリンク</label>
+        <div class="destination-link-row">
+          <input id="destination-link-input" class="destination-link-input" type="url" inputmode="url" autocomplete="off" placeholder="https://maps.app.goo.gl/...">
+          <button type="submit" id="btn-resolve-destination" class="btn">目的地にする</button>
+        </div>
+        <p id="destination-link-status" class="destination-link-status" role="status"></p>
+      </form>
       <div id="spot-chips" class="spot-chips" hidden></div>
       <div id="grid-container"></div>
     </div>

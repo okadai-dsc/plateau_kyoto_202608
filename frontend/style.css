@@ -280,6 +280,54 @@ body.is-intro .app-main {
 .summary-arrow { color: var(--ink-muted); }
 .summary-hint { color: var(--ink-muted); font-size: 0.8rem; }
 
+.destination-link {
+  margin: 0 0 0.85rem;
+  padding: 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.destination-link-label {
+  display: block;
+  margin-bottom: 0.45rem;
+  color: var(--ink-muted);
+  font-size: 0.78rem;
+}
+
+.destination-link-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.5rem;
+}
+
+.destination-link-input {
+  min-width: 0;
+  width: 100%;
+  padding: 0.7rem 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.9rem;
+}
+
+.destination-link-input:focus {
+  border-color: var(--accent);
+  outline: 2px solid var(--accent-soft);
+}
+
+.destination-link-status {
+  min-height: 1.35rem;
+  margin: 0.45rem 0 0;
+  color: var(--ink-muted);
+  font-size: 0.78rem;
+}
+
+.destination-link-status.is-success { color: var(--accent); }
+.destination-link-status.is-error { color: var(--warn); }
+
 .grid-map-wrap {
   position: relative;
   overflow: hidden;
@@ -842,6 +890,8 @@ body.is-intro .app-main {
     text-align: center;
   }
   .grid-map-scroll { max-height: 52vh; }
+  .destination-link-row { grid-template-columns: 1fr; }
+  .destination-link-row .btn { width: 100%; }
   .selector { gap: 0.5rem; }
   .selector-cross { padding-bottom: 0.7rem; }
 }
