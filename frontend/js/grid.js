@@ -53,12 +53,14 @@ const GridView = (() => {
     // ── 全体が必ず見えるグリッド。スクロール前提の表にはしない ──
     const nsCount = grid.ns_streets.length;
     const ewCount = grid.ew_streets.length;
+    // 通り名が読める大きさを既定にする。全体を一望する必要はほとんどない
     const ZOOM_LEVELS = [
       { label: '全体', width: '100%', height: '15rem' },
-      { label: '標準', width: '155%', height: '24rem' },
-      { label: '拡大', width: '230%', height: '34rem' },
+      { label: '広め', width: '190%', height: '26rem' },
+      { label: '標準', width: '340%', height: '34rem' },
+      { label: '拡大', width: '560%', height: '40rem' },
     ];
-    let zoomIndex = 1;
+    let zoomIndex = 2;
 
     const zoomToolbar = document.createElement('div');
     zoomToolbar.className = 'grid-toolbar';
@@ -113,19 +115,34 @@ const GridView = (() => {
     map.style.setProperty('--ns-count', nsCount);
     map.style.setProperty('--ew-count', ewCount);
 
-    const edgeLabels = [
-      ['is-north', grid.ew_streets[0]?.name],
-      ['is-south', grid.ew_streets[ewCount - 1]?.name],
-      ['is-east', grid.ns_streets[0]?.name],
-      ['is-west', grid.ns_streets[nsCount - 1]?.name],
-    ];
-    for (const [className, text] of edgeLabels) {
-      if (!text) continue;
+    // 通り名を地図の中に出す。このアプリの主役は通り名なので、
+    // 四辺だけに書いても地図として読めない。
+    // 見出しは sticky にして、スクロールしても端に残るようにする。
+    const corner = document.createElement('span');
+    corner.className = 'grid-axis is-corner';
+    map.appendChild(corner);
+
+    for (const street of grid.ns_streets) {
       const label = document.createElement('span');
-      label.className = `grid-edge-label ${className}`;
-      label.textContent = text;
-      mapWrap.appendChild(label);
+      label.className = 'grid-axis is-col';
+      if (street.major) label.classList.add('is-major');
+      label.style.gridColumn = String(street.index + 2);
+      label.style.gridRow = '1';
+      label.textContent = street.name;
+      map.appendChild(label);
     }
+
+    for (const street of grid.ew_streets) {
+      const label = document.createElement('span');
+      label.className = 'grid-axis is-row';
+      if (street.major) label.classList.add('is-major');
+      label.style.gridColumn = '1';
+      label.style.gridRow = String(street.index + 2);
+      label.textContent = street.name;
+      map.appendChild(label);
+    }
+
+    // 四辺のラベルは全行・全列の見出しと重複するので置かない
 
     for (const ewStreet of grid.ew_streets) {
       const ewIndex = ewStreet.index;
@@ -140,8 +157,8 @@ const GridView = (() => {
         const button = document.createElement('button');
         button.type = 'button';
         button.className = 'grid-button';
-        button.style.gridColumn = String(nsIndex + 1);
-        button.style.gridRow = String(ewIndex + 1);
+        button.style.gridColumn = String(nsIndex + 2);
+        button.style.gridRow = String(ewIndex + 2);
         button.style.setProperty('--ns-line', nsStreet.major ? 'var(--major-line)' : 'var(--line)');
         button.style.setProperty('--ew-line', ewStreet.major ? 'var(--major-line)' : 'var(--line)');
         button.style.setProperty('--ns-line-width', nsStreet.major ? '2px' : '1px');
@@ -156,6 +173,11 @@ const GridView = (() => {
         if (spotName) {
           button.classList.add('is-spot');
           button.dataset.spot = spotName;
+          // 拡大したときに名前を出す。点だけでは何の観光地か分からない
+          const tag = document.createElement('span');
+          tag.className = 'grid-spot-name';
+          tag.textContent = spotName;
+          button.appendChild(tag);
         }
 
         if (!exists(nsIndex, ewIndex)) {
@@ -322,6 +344,8 @@ const GridView = (() => {
       const zoom = ZOOM_LEVELS[zoomIndex];
       map.style.width = zoom.width;
       map.style.height = zoom.height;
+      // 拡大率を CSS から参照できるようにする（通り名・観光地名の出し分け）
+      map.dataset.zoom = String(zoomIndex);
       zoomRange.value = String(zoomIndex);
       zoomLabel.textContent = zoom.label;
       zoomOut.disabled = zoomIndex === 0;
