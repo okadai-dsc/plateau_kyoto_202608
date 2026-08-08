@@ -1,0 +1,5 @@
+{
+  "scripts": {
+    "build": "rm -rf public && mkdir -p public && cp -R frontend/. public/"
+  }
+}

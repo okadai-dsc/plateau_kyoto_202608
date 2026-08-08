@@ -29,3 +29,4 @@ output/
 Thumbs.db
 .vscode/
 .idea/
+.vercel

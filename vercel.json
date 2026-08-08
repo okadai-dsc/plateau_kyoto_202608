@@ -1,0 +1,12 @@
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": "public",
+  "functions": {
+    "api/index.py": {
+      "includeFiles": "backend/app/data/**"
+    },
+    "api/[...path].py": {
+      "includeFiles": "backend/app/data/**"
+    }
+  }
+}

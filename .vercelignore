@@ -1,0 +1,9 @@
+.git
+.vercel/output
+.vercel/python
+.vercel/.env*
+.venv
+.pytest_cache
+__pycache__
+*.py[cod]
+*.log
