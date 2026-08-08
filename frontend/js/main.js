@@ -36,6 +36,7 @@ const App = (() => {
     // 指示の画面ではヘッダを縮めて、手順に集中させる
     document.body.classList.toggle('is-routing', name === 'route');
     document.body.classList.toggle('is-destination', name === 'destination');
+    document.body.classList.toggle('is-intro', name === 'intro');
     window.scrollTo(0, 0);
   }
 
@@ -204,11 +205,12 @@ const App = (() => {
     state.gridView.clearDestination();
     state.startSelector.reset();   // onChange 経由で state.from / state.to も戻る
     showError('');
-    showScreen('start');
+    showScreen('intro');
   }
 
   // ── 起動 ────────────────────────────────────────────────────
   function bindNavigation() {
+    $('#btn-intro-start').addEventListener('click', () => showScreen('start'));
     $('#btn-route-back').addEventListener('click', () => {
       showScreen('destination');
       state.gridView.revealContext();
@@ -246,7 +248,7 @@ const App = (() => {
 
     setupStartScreen();
     bindNavigation();
-    showScreen('start');
+    showScreen('intro');
   }
 
   return { init };
