@@ -2,7 +2,270 @@
   "visible": {
     "tower": [
       [
+        true,
         false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        false,
+        false,
+        false,
+        false
+      ],
+      [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      [
         false,
         false,
         false,
@@ -66,113 +329,9 @@
         false,
         false,
         false,
-        false,
         false
       ],
       [
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false
-      ],
-      [
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false
-      ],
-      [
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false
-      ],
-      [
-        false,
         false,
         false,
         false,
@@ -236,7 +395,6 @@
         false,
         false,
         false,
-        false,
         false
       ],
       [
@@ -253,41 +411,6 @@
         false,
         false,
         true,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false
-      ],
-      [
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        true,
-        false,
         false,
         false,
         false,
@@ -338,7 +461,6 @@
         false,
         false,
         false,
-        false,
         false
       ],
       [
@@ -355,41 +477,6 @@
         false,
         false,
         true,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false
-      ],
-      [
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        true,
-        false,
         false,
         false,
         false,
@@ -440,11 +527,10 @@
         false,
         false,
         false,
-        false,
         false
       ],
       [
-        false,
+        true,
         false,
         false,
         false,
@@ -474,7 +560,6 @@
         false,
         false,
         false,
-        false,
         false
       ],
       [
@@ -483,6 +568,39 @@
         false,
         false,
         false,
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      [
+        false,
+        false,
+        false,
+        false,
+        true,
         false,
         false,
         false,
@@ -508,7 +626,6 @@
         false,
         false,
         false,
-        false,
         false
       ],
       [
@@ -524,7 +641,6 @@
         false,
         false,
         false,
-        true,
         false,
         false,
         false,
@@ -576,7 +692,6 @@
         false,
         false,
         false,
-        false,
         false
       ],
       [
@@ -610,7 +725,6 @@
         false,
         false,
         false,
-        false,
         false
       ],
       [
@@ -623,7 +737,7 @@
         false,
         false,
         false,
-        false,
+        true,
         false,
         false,
         true,
@@ -636,177 +750,6 @@
         false,
         false,
         false,
-        true,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false
-      ],
-      [
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        true,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        true,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false
-      ],
-      [
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        true,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        true,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false
-      ],
-      [
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        true,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        true,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false
-      ],
-      [
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        true,
-        false,
-        true,
-        false,
-        true,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        true,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false
-      ],
-      [
-        true,
-        true,
-        true,
-        true,
-        false,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        false,
-        true,
-        false,
-        true,
-        false,
-        true,
-        false,
-        true,
-        false,
-        true,
-        true,
-        true,
         false,
         false,
         false,
@@ -842,75 +785,6 @@
         false,
         true,
         false,
-        true,
-        true,
-        true,
-        false,
-        false,
-        false,
-        false,
-        false
-      ],
-      [
-        false,
-        true,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        true,
-        false,
-        true,
-        false,
-        true,
-        false,
-        true,
-        false,
-        true,
-        false,
-        true,
-        false,
-        true,
-        false,
-        true,
-        false,
-        true,
-        true,
-        true,
-        false,
-        false,
-        false,
-        false,
-        false
-      ],
-      [
-        true,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        true,
-        false,
-        true,
-        false,
-        true,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        true,
-        false,
-        false,
         false,
         false,
         false,
@@ -933,6 +807,71 @@
         false,
         false,
         true,
+        false,
+        true,
+        false,
+        false,
+        false,
+        true,
+        false,
+        false,
+        false,
+        false,
+        true,
+        false,
+        true,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
         false,
         false,
         false,
@@ -970,61 +909,58 @@
         false,
         true,
         false,
-        true,
-        false,
-        true,
-        false,
-        true,
-        true,
-        true,
-        false,
-        true,
-        true,
-        true,
-        true,
-        true,
         false,
         false,
-        true,
-        true,
-        true
-      ],
-      [
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
         false,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
       ],
       [
         false,
+        false,
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      [
         false,
         false,
         false,
@@ -1088,45 +1024,9 @@
         false,
         false,
         false,
-        false,
         false
       ],
       [
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        false,
-        false,
-        false,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true
-      ],
-      [
-        true,
         false,
         false,
         false,
@@ -1160,40 +1060,6 @@
         false
       ],
       [
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true
-      ],
-      [
         false,
         false,
         false,
@@ -1219,8 +1085,7 @@
         false,
         false,
         false,
-        false,
-        false,
+        true,
         false,
         false,
         false,
@@ -1228,41 +1093,6 @@
         false
       ],
       [
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true
-      ],
-      [
-        false,
         false,
         false,
         false,
@@ -1326,79 +1156,9 @@
         false,
         false,
         false,
-        false,
         false
       ],
       [
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false
-      ],
-      [
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        false,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true
-      ],
-      [
-        false,
         false,
         false,
         false,
@@ -1462,45 +1222,9 @@
         false,
         false,
         false,
-        false,
         false
       ],
       [
-        true,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false
-      ],
-      [
-        true,
         false,
         false,
         false,
@@ -1564,45 +1288,9 @@
         false,
         false,
         false,
-        false,
         false
       ],
       [
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        false,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true
-      ],
-      [
-        false,
         false,
         false,
         false,
@@ -1666,6 +1354,38 @@
         false,
         false,
         false,
+        false
+      ],
+      [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
         false,
         false
       ],
@@ -1700,6 +1420,38 @@
         false,
         false,
         false,
+        false
+      ],
+      [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
         false,
         false
       ],
@@ -1734,79 +1486,9 @@
         false,
         false,
         false,
-        false,
         false
       ],
       [
-        true,
-        true,
-        true,
-        true,
-        false,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        false,
-        true,
-        false,
-        true,
-        false,
-        true,
-        false,
-        true,
-        false,
-        true,
-        true,
-        true,
-        false,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true
-      ],
-      [
-        true,
-        true,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        true,
-        false,
-        true,
-        false,
-        true,
-        false,
-        true,
-        false,
-        true,
-        false,
-        true,
-        false,
-        true,
-        false,
-        true,
-        false,
-        true,
-        true,
-        true,
-        false,
-        false,
-        false,
-        false,
-        true
-      ],
-      [
-        false,
         false,
         false,
         false,
@@ -1840,41 +1522,237 @@
         false
       ],
       [
-        true,
-        true,
         false,
         false,
         false,
         false,
         false,
         false,
-        true,
-        false,
-        true,
-        false,
-        true,
-        false,
-        true,
-        false,
-        true,
-        false,
-        true,
-        false,
-        true,
-        false,
-        true,
-        false,
-        true,
-        true,
-        true,
         false,
         false,
         false,
         false,
-        true
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
       ],
       [
         false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      [
         false,
         false,
         false,
@@ -1907,6 +1785,1058 @@
         false,
         false
       ]
-    ]
+    ],
+    "skyline": {
+      "0,0": {
+        "北": 0,
+        "北東": 0,
+        "東": 0,
+        "南東": 0,
+        "北西": 0,
+        "西": 40,
+        "南": 80
+      },
+      "0,1": {
+        "北": 0,
+        "北東": 0,
+        "東": 0,
+        "北西": 0,
+        "西": 40
+      },
+      "0,4": {
+        "北": 0,
+        "北西": 0,
+        "東": 40
+      },
+      "0,6": {
+        "北": 0,
+        "西": 0,
+        "北西": 0,
+        "北東": 80,
+        "東": 80
+      },
+      "0,8": {
+        "北": 0,
+        "東": 0,
+        "北西": 0,
+        "南": 40,
+        "北東": 40,
+        "南東": 40
+      },
+      "0,12": {
+        "北東": 0,
+        "東": 0,
+        "北": 80,
+        "北西": 80
+      },
+      "0,16": {
+        "北": 0
+      },
+      "0,18": {
+        "北": 0,
+        "南東": 0
+      },
+      "0,22": {
+        "北東": 0,
+        "南東": 80
+      },
+      "0,23": {
+        "南東": 0,
+        "北西": 40,
+        "東": 80,
+        "南": 80
+      },
+      "1,0": {
+        "東": 0,
+        "南東": 0,
+        "北東": 40
+      },
+      "1,1": {
+        "北東": 0,
+        "東": 0
+      },
+      "1,4": {
+        "東": 0,
+        "南東": 40
+      },
+      "1,5": {
+        "北東": 0,
+        "南東": 40,
+        "東": 80
+      },
+      "1,6": {
+        "北東": 0,
+        "東": 0,
+        "南東": 0,
+        "西": 0
+      },
+      "1,12": {
+        "北東": 0,
+        "東": 0
+      },
+      "1,18": {
+        "北東": 0,
+        "東": 0,
+        "南東": 0,
+        "南": 80
+      },
+      "1,21": {
+        "東": 0,
+        "南東": 40
+      },
+      "1,22": {
+        "東": 0,
+        "西": 0,
+        "南": 80
+      },
+      "1,23": {
+        "東": 0,
+        "南東": 0,
+        "北東": 40,
+        "南": 40
+      },
+      "1,25": {
+        "北東": 0,
+        "東": 0,
+        "北": 40,
+        "南東": 80
+      },
+      "1,26": {
+        "北東": 0,
+        "東": 0,
+        "南東": 0,
+        "西": 0,
+        "北": 80
+      },
+      "2,0": {
+        "東": 0,
+        "南東": 0,
+        "南西": 80,
+        "西": 80,
+        "北": 80
+      },
+      "2,1": {
+        "北": 0,
+        "北東": 0,
+        "西": 0,
+        "北西": 0,
+        "南西": 40
+      },
+      "2,2": {
+        "北": 0
+      },
+      "2,5": {
+        "南東": 40
+      },
+      "2,6": {
+        "北東": 0,
+        "西": 0,
+        "東": 40,
+        "南東": 40
+      },
+      "2,12": {
+        "東": 0,
+        "西": 0,
+        "北東": 40
+      },
+      "2,13": {
+        "南東": 80
+      },
+      "2,18": {
+        "北東": 0,
+        "東": 0,
+        "南東": 0
+      },
+      "3,1": {
+        "北": 0,
+        "北東": 0,
+        "西": 0,
+        "北西": 0,
+        "東": 40,
+        "南西": 40
+      },
+      "3,2": {
+        "北": 80,
+        "北東": 80
+      },
+      "3,6": {
+        "北東": 0,
+        "東": 0,
+        "西": 0
+      },
+      "3,12": {
+        "東": 0,
+        "西": 0
+      },
+      "3,18": {
+        "東": 0,
+        "南東": 0,
+        "北東": 40,
+        "南": 80
+      },
+      "4,1": {
+        "北": 0,
+        "北東": 0,
+        "東": 0,
+        "西": 0,
+        "北西": 0,
+        "南西": 80
+      },
+      "4,2": {
+        "北": 80
+      },
+      "4,6": {
+        "東": 0,
+        "西": 0,
+        "北東": 40
+      },
+      "4,7": {
+        "東": 80
+      },
+      "4,12": {
+        "東": 0,
+        "西": 0
+      },
+      "4,18": {
+        "東": 0,
+        "南東": 0
+      },
+      "5,1": {
+        "北": 0,
+        "北東": 0,
+        "東": 0,
+        "西": 0,
+        "北西": 0,
+        "南東": 80
+      },
+      "5,2": {
+        "北": 0,
+        "北東": 40,
+        "北西": 80
+      },
+      "5,3": {
+        "北": 40
+      },
+      "5,4": {
+        "北": 0,
+        "西": 40
+      },
+      "5,6": {
+        "東": 0,
+        "西": 0,
+        "北東": 80
+      },
+      "5,12": {
+        "西": 0,
+        "東": 80
+      },
+      "5,15": {
+        "東": 80
+      },
+      "5,18": {
+        "南東": 0,
+        "東": 40,
+        "南": 40,
+        "西": 80
+      },
+      "5,21": {
+        "東": 40
+      },
+      "6,1": {
+        "北": 0,
+        "北東": 0,
+        "東": 0,
+        "西": 0,
+        "北西": 0,
+        "南東": 80
+      },
+      "6,2": {
+        "北": 40
+      },
+      "6,4": {
+        "西": 0
+      },
+      "6,6": {
+        "東": 0,
+        "西": 0
+      },
+      "6,12": {
+        "東": 0,
+        "西": 0
+      },
+      "6,18": {
+        "南東": 0,
+        "西": 0,
+        "東": 80
+      },
+      "7,1": {
+        "北": 0,
+        "北東": 0,
+        "東": 0,
+        "西": 0,
+        "北西": 0,
+        "南東": 80
+      },
+      "7,4": {
+        "西": 0
+      },
+      "7,6": {
+        "東": 0,
+        "西": 0
+      },
+      "7,12": {
+        "東": 0,
+        "西": 0
+      },
+      "7,15": {
+        "東": 80
+      },
+      "7,18": {
+        "南東": 0,
+        "西": 0
+      },
+      "8,1": {
+        "北": 0,
+        "北東": 0,
+        "東": 0,
+        "西": 0,
+        "北西": 0
+      },
+      "8,4": {
+        "西": 40,
+        "東": 40
+      },
+      "8,12": {
+        "東": 0,
+        "西": 0
+      },
+      "8,15": {
+        "東": 40
+      },
+      "8,18": {
+        "南東": 0,
+        "西": 0
+      },
+      "8,21": {
+        "東": 0
+      },
+      "8,22": {
+        "東": 0,
+        "西": 0
+      },
+      "8,23": {
+        "東": 0,
+        "南東": 0,
+        "南": 0,
+        "北東": 80
+      },
+      "8,24": {
+        "北東": 0,
+        "東": 0
+      },
+      "9,1": {
+        "北": 0,
+        "北東": 0,
+        "東": 0,
+        "北西": 0,
+        "西": 40,
+        "南東": 40
+      },
+      "9,2": {
+        "北": 80,
+        "北西": 80
+      },
+      "9,4": {
+        "東": 0
+      },
+      "9,6": {
+        "東": 0,
+        "西": 0
+      },
+      "9,18": {
+        "東": 0,
+        "南東": 0,
+        "西": 0
+      },
+      "9,21": {
+        "東": 0
+      },
+      "9,22": {
+        "東": 0,
+        "西": 0,
+        "北東": 40
+      },
+      "10,1": {
+        "北": 0,
+        "北東": 0,
+        "東": 0,
+        "北西": 0,
+        "南東": 40
+      },
+      "10,4": {
+        "東": 0
+      },
+      "10,6": {
+        "東": 0,
+        "西": 0
+      },
+      "10,8": {
+        "東": 0
+      },
+      "10,12": {
+        "東": 0,
+        "西": 0
+      },
+      "10,15": {
+        "南東": 40
+      },
+      "10,18": {
+        "南東": 0,
+        "西": 0,
+        "東": 40
+      },
+      "10,19": {
+        "南東": 80,
+        "西": 80
+      },
+      "10,21": {
+        "東": 0
+      },
+      "10,22": {
+        "東": 0,
+        "西": 0
+      },
+      "10,23": {
+        "東": 0
+      },
+      "11,1": {
+        "北": 0,
+        "北東": 0,
+        "東": 0,
+        "北西": 0,
+        "南東": 40
+      },
+      "11,3": {
+        "北西": 40
+      },
+      "11,4": {
+        "東": 0
+      },
+      "11,6": {
+        "東": 0,
+        "西": 0
+      },
+      "12,0": {
+        "北": 0,
+        "北東": 0,
+        "東": 0,
+        "南東": 0,
+        "南": 0
+      },
+      "12,1": {
+        "北": 0,
+        "北東": 0,
+        "東": 0,
+        "北西": 40,
+        "南東": 40
+      },
+      "12,2": {
+        "北": 0,
+        "北東": 0
+      },
+      "12,3": {
+        "北": 0
+      },
+      "12,4": {
+        "東": 40
+      },
+      "12,6": {
+        "東": 40
+      },
+      "12,8": {
+        "北": 0,
+        "東": 0
+      },
+      "12,9": {
+        "北": 0
+      },
+      "12,10": {
+        "北": 0
+      },
+      "12,12": {
+        "東": 0,
+        "西": 0
+      },
+      "12,13": {
+        "北": 40
+      },
+      "12,14": {
+        "北": 0
+      },
+      "12,15": {
+        "北": 0
+      },
+      "12,17": {
+        "北": 0
+      },
+      "12,18": {
+        "南東": 0,
+        "西": 0
+      },
+      "12,19": {
+        "北": 0,
+        "南東": 80,
+        "西": 80
+      },
+      "12,20": {
+        "北": 0
+      },
+      "12,21": {
+        "北": 0
+      },
+      "12,22": {
+        "東": 0,
+        "西": 0
+      },
+      "12,23": {
+        "東": 80
+      },
+      "12,24": {
+        "東": 40,
+        "北西": 80
+      },
+      "12,25": {
+        "北": 0,
+        "東": 0,
+        "南東": 80
+      },
+      "13,1": {
+        "北東": 0,
+        "東": 0,
+        "北": 40
+      },
+      "13,2": {
+        "北": 80
+      },
+      "13,6": {
+        "東": 0,
+        "西": 0
+      },
+      "13,8": {
+        "西": 40
+      },
+      "14,0": {
+        "北東": 0,
+        "東": 0,
+        "南東": 80,
+        "西": 80
+      },
+      "14,1": {
+        "東": 0,
+        "北東": 80
+      },
+      "14,2": {
+        "北": 80
+      },
+      "14,3": {
+        "北": 40
+      },
+      "14,5": {
+        "西": 40
+      },
+      "14,6": {
+        "東": 0,
+        "西": 0
+      },
+      "14,8": {
+        "西": 80
+      },
+      "14,12": {
+        "東": 0,
+        "西": 0
+      },
+      "14,13": {
+        "東": 0
+      },
+      "14,15": {
+        "東": 0
+      },
+      "14,18": {
+        "東": 0,
+        "南東": 40
+      },
+      "14,19": {
+        "南東": 80,
+        "西": 80
+      },
+      "14,22": {
+        "東": 0,
+        "西": 0
+      },
+      "14,23": {
+        "東": 0
+      },
+      "14,24": {
+        "東": 0,
+        "北東": 40
+      },
+      "14,25": {
+        "東": 0,
+        "西": 80
+      },
+      "15,0": {
+        "東": 0,
+        "北東": 80
+      },
+      "15,1": {
+        "東": 0,
+        "北": 80
+      },
+      "15,5": {
+        "西": 40
+      },
+      "15,6": {
+        "東": 0,
+        "西": 0
+      },
+      "15,8": {
+        "西": 40
+      },
+      "16,0": {
+        "北": 0
+      },
+      "16,1": {
+        "東": 0
+      },
+      "16,3": {
+        "西": 0
+      },
+      "16,5": {
+        "西": 80,
+        "北": 80
+      },
+      "16,6": {
+        "北": 0,
+        "東": 0,
+        "西": 0
+      },
+      "16,7": {
+        "北": 0
+      },
+      "16,8": {
+        "西": 0
+      },
+      "16,12": {
+        "東": 0,
+        "西": 80
+      },
+      "16,15": {
+        "東": 80
+      },
+      "16,18": {
+        "南東": 0,
+        "西": 0
+      },
+      "16,19": {
+        "東": 80,
+        "西": 80
+      },
+      "16,22": {
+        "東": 0,
+        "西": 0
+      },
+      "16,23": {
+        "東": 0,
+        "北": 40
+      },
+      "16,24": {
+        "北西": 0,
+        "東": 40,
+        "西": 40,
+        "北東": 80
+      },
+      "16,25": {
+        "西": 0,
+        "東": 40,
+        "南東": 80
+      },
+      "17,1": {
+        "東": 0,
+        "北東": 40,
+        "北": 80
+      },
+      "17,3": {
+        "西": 80
+      },
+      "17,6": {
+        "東": 0,
+        "西": 0
+      },
+      "17,8": {
+        "西": 0
+      },
+      "18,1": {
+        "東": 0
+      },
+      "18,6": {
+        "東": 0,
+        "西": 0
+      },
+      "18,8": {
+        "西": 80
+      },
+      "18,12": {
+        "東": 0,
+        "西": 40
+      },
+      "18,18": {
+        "東": 0,
+        "西": 0
+      },
+      "18,19": {
+        "東": 80,
+        "西": 80
+      },
+      "18,22": {
+        "東": 0,
+        "西": 0
+      },
+      "18,23": {
+        "東": 0
+      },
+      "18,24": {
+        "北東": 0,
+        "南西": 0,
+        "北西": 40,
+        "東": 80
+      },
+      "18,25": {
+        "東": 0,
+        "南東": 80
+      },
+      "19,0": {
+        "北": 80
+      },
+      "19,1": {
+        "北東": 0,
+        "東": 0
+      },
+      "19,3": {
+        "北東": 40
+      },
+      "19,6": {
+        "東": 0,
+        "西": 0
+      },
+      "20,1": {
+        "東": 0,
+        "北東": 40,
+        "北": 80
+      },
+      "20,2": {
+        "北": 0
+      },
+      "20,3": {
+        "北東": 40,
+        "北": 40
+      },
+      "20,5": {
+        "北": 0
+      },
+      "20,6": {
+        "東": 0,
+        "西": 0
+      },
+      "20,12": {
+        "東": 0
+      },
+      "20,17": {
+        "西": 40
+      },
+      "20,18": {
+        "東": 0,
+        "西": 0
+      },
+      "20,22": {
+        "東": 0,
+        "西": 0
+      },
+      "20,24": {
+        "東": 0
+      },
+      "20,25": {
+        "東": 0,
+        "南西": 40,
+        "南東": 80
+      },
+      "21,6": {
+        "東": 0,
+        "西": 0,
+        "北西": 40,
+        "北": 80
+      },
+      "21,7": {
+        "北": 80
+      },
+      "21,9": {
+        "北": 80
+      },
+      "21,10": {
+        "北": 80
+      },
+      "21,12": {
+        "東": 0
+      },
+      "21,13": {
+        "北": 80
+      },
+      "21,14": {
+        "北": 80
+      },
+      "21,15": {
+        "東": 40,
+        "北": 80
+      },
+      "21,16": {
+        "北": 80
+      },
+      "21,18": {
+        "西": 0
+      },
+      "22,0": {
+        "北": 80
+      },
+      "22,1": {
+        "北": 0,
+        "東": 0
+      },
+      "22,2": {
+        "北": 0,
+        "西": 0,
+        "南西": 40,
+        "北西": 80
+      },
+      "22,3": {
+        "北": 0,
+        "南西": 0,
+        "北西": 40,
+        "北東": 40,
+        "西": 40
+      },
+      "22,4": {
+        "北": 0,
+        "西": 0,
+        "北西": 0,
+        "南西": 80
+      },
+      "22,5": {
+        "西": 0,
+        "北": 40,
+        "北西": 40
+      },
+      "22,6": {
+        "北": 0,
+        "東": 0,
+        "西": 80,
+        "北西": 80
+      },
+      "22,7": {
+        "北": 0
+      },
+      "22,8": {
+        "北": 0
+      },
+      "22,9": {
+        "北": 0
+      },
+      "22,10": {
+        "北": 0
+      },
+      "22,11": {
+        "北": 0
+      },
+      "22,12": {
+        "北": 0,
+        "西": 0
+      },
+      "22,15": {
+        "東": 0
+      },
+      "22,18": {
+        "東": 0,
+        "西": 0
+      },
+      "22,22": {
+        "東": 0,
+        "西": 0
+      },
+      "22,24": {
+        "東": 0,
+        "北西": 40
+      },
+      "23,1": {
+        "東": 0
+      },
+      "23,2": {
+        "北東": 0,
+        "南西": 0,
+        "南東": 40,
+        "東": 40,
+        "西": 40,
+        "北西": 80
+      },
+      "23,5": {
+        "西": 0,
+        "北": 40,
+        "北西": 40,
+        "南西": 80
+      },
+      "23,6": {
+        "東": 0,
+        "西": 80,
+        "北西": 80
+      },
+      "23,12": {
+        "西": 0
+      },
+      "23,15": {
+        "東": 0
+      },
+      "23,18": {
+        "東": 0
+      },
+      "23,22": {
+        "西": 0,
+        "東": 40
+      },
+      "23,24": {
+        "東": 0,
+        "北西": 40
+      },
+      "24,1": {
+        "東": 0
+      },
+      "24,5": {
+        "西": 0,
+        "北西": 0,
+        "北": 80,
+        "南西": 80
+      },
+      "24,6": {
+        "東": 0
+      },
+      "24,12": {
+        "西": 0
+      },
+      "24,18": {
+        "東": 0,
+        "西": 0
+      },
+      "24,23": {
+        "南西": 80,
+        "西": 80,
+        "北西": 80
+      },
+      "25,1": {
+        "東": 0
+      },
+      "25,2": {
+        "南西": 40,
+        "南東": 40,
+        "西": 80,
+        "東": 80
+      },
+      "25,5": {
+        "東": 0,
+        "西": 0,
+        "北西": 40,
+        "北": 80,
+        "北東": 80,
+        "南東": 80
+      },
+      "25,6": {
+        "北": 40,
+        "北東": 80,
+        "東": 80
+      },
+      "25,12": {
+        "西": 0
+      },
+      "25,18": {
+        "東": 0,
+        "西": 0
+      },
+      "25,22": {
+        "東": 0,
+        "西": 0
+      },
+      "25,24": {
+        "東": 0
+      },
+      "26,1": {
+        "東": 0
+      },
+      "26,2": {
+        "東": 0,
+        "南東": 0,
+        "南西": 0,
+        "北東": 40,
+        "西": 80
+      },
+      "27,2": {
+        "東": 0,
+        "南東": 0,
+        "南西": 40
+      },
+      "28,2": {
+        "東": 0,
+        "南東": 0
+      },
+      "29,2": {
+        "南東": 80
+      },
+      "30,0": {
+        "東": 40
+      },
+      "30,1": {
+        "北西": 0
+      },
+      "30,5": {
+        "東": 0,
+        "南東": 0,
+        "南西": 0,
+        "北西": 40,
+        "北": 40,
+        "北東": 80
+      },
+      "30,6": {
+        "東": 0,
+        "南東": 0,
+        "南西": 0,
+        "北西": 40,
+        "北": 40,
+        "北東": 80
+      },
+      "30,8": {
+        "西": 40
+      },
+      "30,12": {
+        "東": 0,
+        "西": 0
+      },
+      "30,17": {
+        "北東": 0
+      },
+      "30,18": {
+        "北": 0,
+        "西": 0,
+        "南西": 40,
+        "北西": 40
+      },
+      "30,22": {
+        "北東": 0,
+        "西": 0
+      }
+    }
   }
 }

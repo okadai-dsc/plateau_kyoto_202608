@@ -19,7 +19,9 @@ def test_resolves_google_at_coordinates_to_nearest_intersection(repo_root):
 
     assert response["destination"] == {"ns": "ns-12", "ew": "ew-12"}
     assert response["label"] == "烏丸通 × 四条通 付近"
-    assert response["distance_m"] == 0
+    # 実データでは通りの位置が実測の中央値なので、数mのずれは出る。
+    # 正しい交差点に寄っていることが要件で、完全一致は求めない
+    assert response["distance_m"] < 30
     assert len(response["candidates"]) == 3
 
 

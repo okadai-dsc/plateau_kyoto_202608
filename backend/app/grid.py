@@ -29,6 +29,7 @@ class Grid:
         }
         self._spots: list[dict[str, Any]] = streets_data.get("spots", [])
         self._landmarks: list[dict[str, Any]] = streets_data.get("landmarks", [])
+        self._block: dict[str, Any] = streets_data.get("block", {})
         self._geo: dict[str, Any] = streets_data.get("geo", {})
 
         self._validate_streets()
@@ -61,6 +62,11 @@ class Grid:
         """緯度経度を内部のメートル座標へ寄せるための基準点。"""
         reference = self._geo.get("reference")
         return None if reference is None else reference.copy()
+
+    @property
+    def block(self) -> dict[str, Any]:
+        """街区の間隔(m)。目印が何も見えないときの最後の手がかり。"""
+        return dict(self._block)
 
     def position(self, ns_index: int, ew_index: int) -> tuple[float, float]:
         """交差点の位置(m)。x = 川端通から西へ、y = 今出川通から南へ。

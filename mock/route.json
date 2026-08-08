@@ -9,13 +9,18 @@
   },
   "start": {
     "landmark": {
-      "id": "daimonji",
-      "name": "大文字",
-      "layer": 2,
+      "kind": "skyline",
+      "id": "skyline",
+      "name": "山の稜線",
+      "layer": 3,
       "bearing": "北東",
-      "distance": 3605
+      "walk": 0,
+      "directions": {
+        "北東": 0,
+        "東": 0
+      }
     },
-    "hint": "大文字が北東に見えます。大文字を正面に見て、左前が上ルです。"
+    "hint": "北東に山が見えます。山を正面に見て、左前が上ルです。"
   },
   "moves": [
     {
