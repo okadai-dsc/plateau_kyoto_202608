@@ -48,25 +48,14 @@ class RouteService:
         if not self._walkable(from_ns, from_ew, to_ns, to_ew):
             raise RouteNotFound()
 
-        landmark, bearing, distance = self.landmark.best(from_ns, from_ew)
+        cue = self.landmark.best(from_ns, from_ew)
 
         return {
             "from": self.grid.intersection_from_indices(from_ns, from_ew),
             "to": self.grid.intersection_from_indices(to_ns, to_ew),
             "start": {
-                "landmark": None if landmark is None else {
-                    "id": landmark.id,
-                    "name": landmark.name,
-                    "layer": landmark.layer,
-                    "bearing": bearing,
-                    "distance": round(distance or 0),
-                },
-                "hint": build_start_hint(
-                    None if landmark is None else landmark.name,
-                    bearing,
-                    distance,
-                    0 if landmark is None else landmark.min_distance,
-                ),
+                "landmark": None if cue.get("kind") == "none" else cue,
+                "hint": build_start_hint(cue),
             },
             "moves": self._moves(from_ns, from_ew, to_ns, to_ew),
         }
