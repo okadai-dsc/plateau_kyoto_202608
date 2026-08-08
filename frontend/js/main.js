@@ -150,7 +150,8 @@ const App = (() => {
 
     const hint = $('#route-hint');
     hint.textContent = route.start?.hint ?? '';
-    hint.classList.toggle('is-invisible', route.start?.tower_visible === false);
+    // 目印が1つも見えないときだけ警告色にする（見えているなら方角が分かる）
+    hint.classList.toggle('is-invisible', !route.start?.landmark?.bearing);
 
     const list = $('#route-moves');
     list.innerHTML = '';
