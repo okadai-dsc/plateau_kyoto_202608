@@ -35,6 +35,8 @@ const App = (() => {
     }
     // 指示の画面ではヘッダを縮めて、手順に集中させる
     document.body.classList.toggle('is-routing', name === 'route');
+    document.body.classList.toggle('is-destination', name === 'destination');
+    document.body.classList.toggle('is-intro', name === 'intro');
     window.scrollTo(0, 0);
   }
 
@@ -44,28 +46,35 @@ const App = (() => {
     banner.hidden = !message;
   }
 
-  // ── 1. 現在地と目的地を1画面で指定する ──────────────────────
+  // ── 1. 現在地 → 2. 目的地を分けて指定する ───────────────────
   function setupStartScreen() {
-    // 現在地はセレクタ、目的地はグリッド。同じ画面に並べる
     state.gridView = GridView.create($('#grid-container'), state.grid, {
       onSelect(intersection) {
         state.to = intersection;
-        updateSummary();
+        updateDestinationState();
       },
     });
 
     state.startSelector = IntersectionSelector.create($('#start-selector'), state.grid, {
       onChange(value) {
         state.from = value;
-        // グリッドの現在地マーカーをセレクタに追従させる
         state.gridView.setCurrent(value);
         state.to = state.gridView.getSelected();
-        updateSummary();
+        updateStartState();
+        updateDestinationState();
       },
     });
 
     renderSpotChips();
-    updateSummary();
+    updateStartState();
+    updateDestinationState();
+    $('#btn-start-next').addEventListener('click', () => {
+      if (!state.from) return;
+      updateDestinationState();
+      showScreen('destination');
+      state.gridView.revealContext();
+    });
+    $('#btn-destination-back').addEventListener('click', () => showScreen('start'));
     $('#btn-go').addEventListener('click', requestRoute);
   }
 
@@ -102,12 +111,15 @@ const App = (() => {
     }
   }
 
-  function updateSummary() {
+  function updateStartState() {
+    $('#btn-start-next').disabled = !state.from;
+  }
+
+  function updateDestinationState() {
     const summary = $('#summary');
     const spotName = state.to ? state.gridView.spotNameAt(state.to) : null;
 
-    // 未選択のうちは何も出さない。グリッドを画面に入れたいので場所を空ける
-    if (!state.from && !state.to) {
+    if (!state.from) {
       summary.hidden = true;
     } else {
       summary.hidden = false;
@@ -193,12 +205,16 @@ const App = (() => {
     state.gridView.clearDestination();
     state.startSelector.reset();   // onChange 経由で state.from / state.to も戻る
     showError('');
-    showScreen('start');
+    showScreen('intro');
   }
 
   // ── 起動 ────────────────────────────────────────────────────
   function bindNavigation() {
-    $('#btn-route-back').addEventListener('click', () => showScreen('start'));
+    $('#btn-intro-start').addEventListener('click', () => showScreen('start'));
+    $('#btn-route-back').addEventListener('click', () => {
+      showScreen('destination');
+      state.gridView.revealContext();
+    });
     $('#btn-walk').addEventListener('click', startWalking);
 
     $('#btn-peek').addEventListener('click', stopWalking);
@@ -232,7 +248,7 @@ const App = (() => {
 
     setupStartScreen();
     bindNavigation();
-    showScreen('start');
+    showScreen('intro');
   }
 
   return { init };

@@ -83,6 +83,7 @@ body.is-walking { overflow: hidden; }
 body.is-routing .app-header { padding: 0.6rem 0 0.4rem; }
 body.is-routing .app-title { font-size: 1rem; }
 body.is-routing .app-tagline { display: none; }
+body.is-intro .app-header { display: none; }
 
 .app-tagline {
   margin: 0.25rem 0 0;
@@ -115,7 +116,77 @@ body.is-routing .app-tagline { display: none; }
   margin: 0 auto;
 }
 
+body.is-destination .app-main {
+  max-width: min(56rem, calc(100vw - 2rem));
+}
+
+body.is-intro .app-main {
+  max-width: 24rem;
+}
+
 /* ── 画面共通 ───────────────────────────────────────────── */
+.intro-screen {
+  min-height: calc(100vh - 3rem);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  text-align: center;
+}
+
+.intro-mark {
+  position: relative;
+  width: 4.4rem;
+  height: 4.4rem;
+  margin: 0 auto 1.2rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(90deg, transparent 48%, var(--major-line) 48%, var(--major-line) 52%, transparent 52%),
+    linear-gradient(0deg, transparent 48%, var(--major-line) 48%, var(--major-line) 52%, transparent 52%),
+    var(--surface);
+  box-shadow: inset 0 0 0 0.55rem var(--bg);
+}
+
+.intro-mark span {
+  position: absolute;
+  background: var(--line);
+}
+
+.intro-mark span:nth-child(1),
+.intro-mark span:nth-child(2) {
+  top: 0.8rem;
+  bottom: 0.8rem;
+  width: 1px;
+}
+
+.intro-mark span:nth-child(1) { left: 1.45rem; }
+.intro-mark span:nth-child(2) { right: 1.45rem; }
+
+.intro-mark span:nth-child(3),
+.intro-mark span:nth-child(4) {
+  left: 0.8rem;
+  right: 0.8rem;
+  height: 1px;
+}
+
+.intro-mark span:nth-child(3) { top: 1.45rem; }
+.intro-mark span:nth-child(4) { bottom: 1.45rem; }
+
+.intro-title {
+  margin: 0;
+  font-size: 2.1rem;
+  letter-spacing: 0.18em;
+  line-height: 1.1;
+}
+
+.intro-tagline {
+  margin: 0.7rem 0 2.2rem;
+  color: var(--ink);
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
 .screen-title {
   margin: 0 0 0.5rem;
   font-size: 1.15rem;
@@ -128,7 +199,6 @@ body.is-routing .app-tagline { display: none; }
   font-size: 0.9rem;
 }
 
-/* 現在地の入力と目的地のグリッドを1画面に並べるための区切り */
 .block + .block {
   margin-top: 1.4rem;
   padding-top: 1.4rem;
@@ -250,6 +320,62 @@ body.is-routing .app-tagline { display: none; }
   background: var(--surface);
 }
 
+.grid-toolbar {
+  display: grid;
+  grid-template-columns: 2.35rem minmax(0, 1fr) 2.35rem auto auto;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0 0 0.65rem;
+}
+
+.grid-zoom-button,
+.grid-zoom-fit {
+  height: 2.25rem;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}
+
+.grid-zoom-button {
+  padding: 0;
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+.grid-zoom-fit {
+  padding: 0 0.7rem;
+  font-size: 0.82rem;
+}
+
+.grid-zoom-button:hover:not(:disabled),
+.grid-zoom-fit:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.grid-zoom-button:disabled,
+.grid-zoom-fit:disabled {
+  color: var(--ink-muted);
+  cursor: default;
+  opacity: 0.45;
+}
+
+.grid-zoom-range {
+  width: 100%;
+  accent-color: var(--accent);
+}
+
+.grid-zoom-label {
+  min-width: 2.4rem;
+  color: var(--ink-muted);
+  font-size: 0.78rem;
+  text-align: right;
+  white-space: nowrap;
+}
+
 .grid-edge-label {
   position: absolute;
   z-index: 2;
@@ -289,15 +415,24 @@ body.is-routing .app-tagline { display: none; }
   writing-mode: vertical-rl;
 }
 
+.grid-map-scroll {
+  max-height: min(60vh, 34rem);
+  overflow: auto;
+  border: 1px solid var(--line);
+  background: var(--line);
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
 .grid-map {
   display: grid;
   grid-template-columns: repeat(var(--ns-count), minmax(0, 1fr));
   grid-template-rows: repeat(var(--ew-count), minmax(0, 1fr));
   width: 100%;
   height: min(31vh, 15rem);
-  border: 1px solid var(--line);
   background: var(--line);
-  touch-action: manipulation;
+  touch-action: pan-x pan-y;
+  transition: width 0.18s ease, height 0.18s ease;
 }
 
 /* ── 観光地 ─────────────────────────────────────────────── */
@@ -653,8 +788,17 @@ body.is-routing .app-tagline { display: none; }
 /* ── 画面が狭いとき ─────────────────────────────────────── */
 @media (max-width: 380px) {
   body { padding-inline: 0.75rem; }
+  body.is-destination .app-main { max-width: calc(100vw - 1.5rem); }
   .grid-map-wrap { padding-inline: 0.8rem; }
-  .grid-map { height: 14rem; }
+  .grid-toolbar {
+    grid-template-columns: 2.2rem minmax(0, 1fr) 2.2rem auto;
+  }
+  .grid-zoom-label {
+    grid-column: 1 / -1;
+    min-width: 0;
+    text-align: center;
+  }
+  .grid-map-scroll { max-height: 52vh; }
   .selector { gap: 0.5rem; }
   .selector-cross { padding-bottom: 0.7rem; }
 }
