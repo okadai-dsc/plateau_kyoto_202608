@@ -9,7 +9,7 @@
 </head>
 <body>
 
-<header class="app-header">
+<header class="app-header" id="app-header">
   <h1 class="app-title">Kyoter</h1>
   <p class="app-tagline">地図を見ずに、目的地まで。</p>
   <p id="mock-badge" class="mock-badge" hidden>モックデータで表示しています</p>
@@ -24,18 +24,13 @@
 
     <div class="block">
       <h2 class="screen-title">いま、どの交差点にいますか</h2>
-      <p class="screen-lead">
-        いちばん近い交差点まで歩いて、通りの名前を見てください。
-      </p>
+      <p class="screen-lead">いちばん近い交差点の、通りの名前を見てください。</p>
       <div id="start-selector"></div>
     </div>
 
     <div class="block">
       <h2 class="screen-title">どこへ行きますか</h2>
-      <dl class="summary">
-        <div><dt>現在地</dt><dd id="summary-current">—</dd></div>
-        <div><dt>目的地</dt><dd id="summary-destination">—</dd></div>
-      </dl>
+      <p id="summary" class="summary" hidden></p>
       <div id="spot-chips" class="spot-chips" hidden></div>
       <div id="grid-container"></div>
     </div>
@@ -55,9 +50,9 @@
 
     <p id="route-hint" class="route-hint"></p>
 
-    <div id="route-tabs" class="route-tabs" hidden></div>
+    <ul id="route-moves" class="moves"></ul>
 
-    <ol id="route-steps" class="steps"></ol>
+    <p class="moves-note">順番は自由です。どちらから進んでも着きます。</p>
 
     <div class="actions actions-stack">
       <button type="button" id="btn-walk" class="btn btn-primary btn-block">覚えた。歩きます</button>

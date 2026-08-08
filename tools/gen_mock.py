@@ -135,95 +135,59 @@ def tower_bearing(ns: int, ew: int, tower: tuple[int, int]) -> str | None:
     return vertical or horizontal  # 同一通り上なら単一方位、足元なら None
 
 
-def tower_phrase(direction: str, bearing: str | None) -> str | None:
-    """タワーを基準にした言い回し（docs/BACKEND.md 4.4）。
+# タワーの方を向いたときに、その向きがどこに当たるか
+RELATIVE = {
+    0: "正面", 45: "右前", 90: "右手", 135: "右後ろ",
+    180: "真後ろ", 225: "左後ろ", 270: "左手", 315: "左前",
+}
 
-    方位を直接言わず「背にして」「右手に見て」と表現する（docs/SPEC.md 2.1）。
+
+def start_hint(visible: bool, bearing: str | None) -> str:
+    """出発地点での方角の手がかり。
+
+    文面は backend/app/instruction.py の build_start_hint と揃える。
     """
-    if bearing is None:
-        return None
-    diff = (BEARING_DEG[bearing] - DIRECTION_DEG[direction]) % 360
-    if diff == 0:
-        return "京都タワーに向かって"
-    if diff == 180:
-        return "京都タワーを背にして"
-    if diff in (45, 90, 135):
-        return "京都タワーを右手に見て"
-    return "京都タワーを左手に見て"
+    if not visible or bearing is None:
+        return "京都タワーは見えません。通り名の標識で方角を確かめてください。"
+    relative = RELATIVE[(DIRECTION_DEG["上ル"] - BEARING_DEG[bearing]) % 360]
+    if relative == "正面":
+        return f"京都タワーが{bearing}に見えます。タワーの方が上ルです。"
+    return f"京都タワーが{bearing}に見えます。タワーを正面に見て、{relative}が上ルです。"
 
 
-# ── 経路のモック生成 ────────────────────────────────────────
+# ── 「方角 × 本数」の生成 ────────────────────────────────
 
-def build_route(frm, to, vertical_first, source, exists, visible, tower):
-    """経路を手順に分解する。グラフ探索はしない（docs/SPEC.md 3.5）。
+def build_moves(frm, to, source):
+    """経路は指定せず、方角と本数だけを出す（docs/SPEC.md 3.5）。
 
-    交差点が無い場所は通行を妨げない（横切る通りが1本減るだけ）。
-    ただし区間の終点は実在しなければならない。backend/app/router.py と同じ規則。
-    通れない場合は None を返す。
+    本数は通り順の添字の差。実際に横切る本数は通る道で変わるため目安で、
+    通り名を正とする。backend/app/router.py と同じ規則。
     """
     ns_from, ew_from = frm
     ns_to, ew_to = to
 
-    legs = []
+    moves = []
     if ew_to != ew_from:
-        legs.append(("ew", "上ル" if ew_to < ew_from else "下ル"))
-    if ns_to != ns_from:
-        legs.append(("ns", "東入ル" if ns_to < ns_from else "西入ル"))
-    if not vertical_first:
-        legs.reverse()
-
-    ns, ew = ns_from, ew_from
-    points = [(ns_from, ew_from)]
-    steps = []
-
-    for axis, direction in legs:
-        start_ns, start_ew = ns, ew
-        bearing = tower_bearing(start_ns, start_ew, tower)
-        # タワーが見えない区間では方位の手がかりを付けない（docs/BACKEND.md 4.4）
-        visible_here = visible[start_ew][start_ns]
-        phrase = tower_phrase(direction, bearing) if visible_here else None
-
-        if axis == "ew":
-            if not exists[ew_to][ns]:
-                return None                       # 終点で曲がれない
-            step = 1 if ew_to > ew else -1
-            crossed = [(ns, e) for e in range(ew + step, ew_to + step, step) if exists[e][ns]]
-            ew = ew_to
-            street_id, street_name = f"ew-{ew:02d}", source["ew"][ew]["name"]
-        else:
-            if not exists[ew][ns_to]:
-                return None
-            step = 1 if ns_to > ns else -1
-            crossed = [(n, ew) for n in range(ns + step, ns_to + step, step) if exists[ew][n]]
-            ns = ns_to
-            street_id, street_name = f"ns-{ns:02d}", source["ns"][ns]["name"]
-
-        points.extend(crossed)
-        count = len(crossed)   # 「N本」は添字の差ではなく実際に横切る通りの本数
-
-        instruction = f"{count}本{direction}（{street_name}まで）"
-        if phrase:
-            instruction = f"{phrase}、{instruction}"
-
-        steps.append({
+        direction = "上ル" if ew_to < ew_from else "下ル"
+        name = source["ew"][ew_to]["name"]
+        moves.append({
             "direction": direction,
-            "count": count,
-            "to_street": street_id,
-            "to_street_name": street_name,
-            "instruction": instruction,
-            "tower_visible": visible_here,
-            "tower_bearing": bearing,
+            "count": abs(ew_to - ew_from),
+            "to_street": f"ew-{ew_to:02d}",
+            "to_street_name": name,
+            "instruction": f"{name}まで{direction}（およそ{abs(ew_to - ew_from)}本）",
         })
-
-    turns = sum(1 for a, b in zip(steps, steps[1:]) if a["direction"] != b["direction"])
-    seen = sum(1 for ns_i, ew_i in points if visible[ew_i][ns_i])
-
-    return {
-        "id": "",
-        "visible_ratio": round(seen / len(points), 2),
-        "turns": turns,
-        "steps": steps,
-    }
+    if ns_to != ns_from:
+        direction = "東入ル" if ns_to < ns_from else "西入ル"
+        name = source["ns"][ns_to]["name"]
+        moves.append({
+            "direction": direction,
+            "count": abs(ns_to - ns_from),
+            "to_street": f"ns-{ns_to:02d}",
+            "to_street_name": name,
+            "instruction": f"{name}まで{direction}（およそ{abs(ns_to - ns_from)}本）",
+        })
+    return moves
 
 
 # ── 出力 ────────────────────────────────────────────────────
@@ -305,21 +269,6 @@ def main() -> None:
     frm = (ns_at["河原町通"], ew_at["四条通"])
     to = (ns_at["烏丸通"], ew_at["三条通"])
 
-    # 並べ替えの基準は backend/app/router.py と揃える
-    VISIBLE_WEIGHT, TURN_WEIGHT = 100.0, 1.0
-    routes = [
-        route for route in (
-            build_route(frm, to, vertical_first, source, exists, visible, tower)
-            for vertical_first in (False, True)
-        ) if route is not None
-    ]
-    routes.sort(
-        key=lambda r: r["visible_ratio"] * VISIBLE_WEIGHT - r["turns"] * TURN_WEIGHT,
-        reverse=True,
-    )
-    for index, route in enumerate(routes, start=1):
-        route["id"] = f"r{index}"
-
     start_visible = visible[frm[1]][frm[0]]
     start_bearing = tower_bearing(frm[0], frm[1], tower)
     route = {
@@ -328,14 +277,9 @@ def main() -> None:
         "start": {
             "tower_visible": start_visible,
             "tower_bearing": start_bearing,
-            # 文面は backend/app/instruction.py の build_start_hint と揃える
-            "hint": (
-                f"京都タワーが{start_bearing}に見えます。"
-                if start_visible
-                else "京都タワーは見えません。通り名を確認して進んでください。"
-            ),
+            "hint": start_hint(start_visible, start_bearing),
         },
-        "routes": routes,
+        "moves": build_moves(frm, to, source),
     }
 
     outputs = {

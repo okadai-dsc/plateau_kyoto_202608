@@ -5,12 +5,9 @@ from typing import Any
 
 from .errors import IntersectionNotFound, RouteNotFound, SameLocation
 from .grid import Grid
-from .instruction import build_instruction, build_start_hint
+from .instruction import build_move_instruction, build_start_hint
 from .landmark import LandmarkService
 from .models import Axis, Direction, Intersection
-
-VISIBLE_WEIGHT = 100.0
-TURN_WEIGHT = 1.0
 
 
 @dataclass(frozen=True)
@@ -21,6 +18,13 @@ class Movement:
 
 
 class RouteService:
+    """現在地と目的地から「方角 × 本数」を出す。
+
+    経路は指定しない。碁盤の目では **上ル/下ル と 東入ル/西入ル を
+    どの順に消化しても着く** ので、覚えるのは方角2つと本数2つで足りる。
+    ここが本企画の核であり、順番まで決めると普通のナビになる（docs/SPEC.md 3.5）。
+    """
+
     def __init__(self, grid: Grid, landmark: LandmarkService) -> None:
         self.grid = grid
         self.landmark = landmark
@@ -40,61 +44,64 @@ class RouteService:
         if not self.grid.exists_indices(to_ns, to_ew):
             raise IntersectionNotFound()
 
-        from_payload = self.grid.intersection_from_indices(from_ns, from_ew)
-        to_payload = self.grid.intersection_from_indices(to_ns, to_ew)
-        candidates = self._candidate_movements(from_ns, from_ew, to_ns, to_ew)
-
-        routes = []
-        for movements in candidates:
-            route = self._build_candidate(from_ns, from_ew, movements)
-            if route is not None:
-                routes.append(route)
-
-        if not routes:
+        # 順番は自由だが、少なくとも1通りは通り抜けられる必要がある
+        if not self._walkable(from_ns, from_ew, to_ns, to_ew):
             raise RouteNotFound()
-
-        routes.sort(
-            key=lambda route: (
-                route["visible_ratio"] * VISIBLE_WEIGHT - route["turns"] * TURN_WEIGHT
-            ),
-            reverse=True,
-        )
-        for index, route in enumerate(routes, start=1):
-            route["id"] = f"r{index}"
 
         start_visible = self.landmark.tower_visible_indices(from_ns, from_ew)
         start_bearing = self.landmark.tower_bearing_indices(from_ns, from_ew)
 
         return {
-            "from": from_payload,
-            "to": to_payload,
+            "from": self.grid.intersection_from_indices(from_ns, from_ew),
+            "to": self.grid.intersection_from_indices(to_ns, to_ew),
             "start": {
                 "tower_visible": start_visible,
                 "tower_bearing": start_bearing,
                 "hint": build_start_hint(start_visible, start_bearing),
             },
-            "routes": routes,
+            "moves": self._moves(from_ns, from_ew, to_ns, to_ew),
         }
 
-    def _candidate_movements(
+    # ── 方角と本数 ──────────────────────────────────────────
+
+    def _moves(
         self,
         from_ns: int,
         from_ew: int,
         to_ns: int,
         to_ew: int,
-    ) -> list[list[Movement]]:
-        ns_movement = self._movement_for_axis("ns", from_ns, to_ns)
-        ew_movement = self._movement_for_axis("ew", from_ew, to_ew)
+    ) -> list[dict[str, Any]]:
+        movements = [
+            self._movement_for_axis("ew", from_ew, to_ew),
+            self._movement_for_axis("ns", from_ns, to_ns),
+        ]
 
-        if ns_movement and ew_movement:
-            return [[ew_movement, ns_movement], [ns_movement, ew_movement]]
-        if ew_movement:
-            return [[ew_movement]]
-        if ns_movement:
-            return [[ns_movement]]
-        return []
+        moves = []
+        for movement in movements:
+            if movement is None:
+                continue
+            index = to_ew if movement.axis == "ew" else to_ns
+            name = self.grid.street_name(movement.axis, index)
+            moves.append(
+                {
+                    "direction": movement.direction,
+                    "count": movement.count,
+                    "to_street": self.grid.street_id(movement.axis, index),
+                    "to_street_name": name,
+                    "instruction": build_move_instruction(
+                        movement.direction, movement.count, name
+                    ),
+                }
+            )
+        return moves
 
     def _movement_for_axis(self, axis: Axis, current: int, target: int) -> Movement | None:
+        """本数は通り順（数え歌の並び）での差。
+
+        実際に横切る本数は通る道によって変わる。届いていない小路があるためで、
+        順番を決めない以上ひとつには定まらない。
+        そこで本数は目安として出し、**通り名を正とする**。
+        """
         diff = target - current
         if diff == 0:
             return None
@@ -104,127 +111,16 @@ class RouteService:
             direction = "西入ル" if diff > 0 else "東入ル"
         return Movement(axis=axis, direction=direction, count=abs(diff))
 
-    def _build_candidate(
-        self,
-        start_ns: int,
-        start_ew: int,
-        movements: list[Movement],
-    ) -> dict[str, Any] | None:
-        current_ns = start_ns
-        current_ew = start_ew
-        points = [(current_ns, current_ew)]
-        steps = []
+    # ── 通れるかどうか ──────────────────────────────────────
 
-        for movement in movements:
-            step_start_ns = current_ns
-            step_start_ew = current_ew
-            target_ns, target_ew = self._target_after_movement(
-                current_ns, current_ew, movement
-            )
+    def _walkable(self, from_ns: int, from_ew: int, to_ns: int, to_ew: int) -> bool:
+        """縦から先・横から先のどちらかで通り抜けられるか。
 
-            traversed = self._traverse_points(
-                current_ns, current_ew, target_ns, target_ew, movement.axis
-            )
-            if traversed is None:
-                return None
-
-            points.extend(traversed)
-            # 「N本」は添字の差ではなく、実際に横切る通りの本数
-            crossed = len(traversed)
-            current_ns = target_ns
-            current_ew = target_ew
-            to_axis = movement.axis
-            to_index = current_ns if to_axis == "ns" else current_ew
-            start_visible = self.landmark.tower_visible_indices(step_start_ns, step_start_ew)
-            start_bearing = self.landmark.tower_bearing_indices(step_start_ns, step_start_ew)
-            to_street_name = self.grid.street_name(to_axis, to_index)
-
-            steps.append(
-                {
-                    "direction": movement.direction,
-                    "count": crossed,
-                    "to_street": self.grid.street_id(to_axis, to_index),
-                    "to_street_name": to_street_name,
-                    "instruction": build_instruction(
-                        movement.direction,
-                        crossed,
-                        to_street_name,
-                        start_visible,
-                        start_bearing,
-                    ),
-                    "tower_visible": start_visible,
-                    "tower_bearing": start_bearing,
-                }
-            )
-
-        visible_count = sum(
-            1
-            for ns_index, ew_index in points
-            if self.landmark.tower_visible_indices(ns_index, ew_index)
-        )
-        visible_ratio = round(visible_count / len(points), 2)
-
-        return {
-            "id": "",
-            "visible_ratio": visible_ratio,
-            "turns": self._turn_count(steps),
-            "steps": steps,
-        }
-
-    def _target_after_movement(
-        self,
-        current_ns: int,
-        current_ew: int,
-        movement: Movement,
-    ) -> tuple[int, int]:
-        if movement.axis == "ew":
-            step = -1 if movement.direction == "上ル" else 1
-            return current_ns, current_ew + step * movement.count
-        step = -1 if movement.direction == "東入ル" else 1
-        return current_ns + step * movement.count, current_ew
-
-    def _traverse_points(
-        self,
-        current_ns: int,
-        current_ew: int,
-        target_ns: int,
-        target_ew: int,
-        axis: Axis,
-    ) -> list[tuple[int, int]] | None:
-        """区間を進むあいだに実際に横切る交差点を返す。
-
-        交差点が無い場所は「相手の通りがそこまで届いていない」だけで、
-        その通りを歩くこと自体は妨げられない（横切る通りが1本減るだけ）。
-        たとえば河原町通を四条から三条へ上がるとき、
-        錦小路通は河原町通まで届いていないが、河原町通は普通に歩ける。
-
-        ただし**区間の終点は実在しなければならない**。
-        そこで曲がる（あるいは到着する）ため。
+        曲がる地点に交差点が無ければ、その順序では曲がれない。
+        途中に交差点が無いのは構わない（その通り自体は歩ける）。
         """
-        traversed: list[tuple[int, int]] = []
-        if axis == "ew":
-            if not self.grid.exists_indices(current_ns, target_ew):
-                return None
-            step = 1 if target_ew > current_ew else -1
-            for ew_index in range(current_ew + step, target_ew + step, step):
-                if self.grid.exists_indices(current_ns, ew_index):
-                    traversed.append((current_ns, ew_index))
-        else:
-            if not self.grid.exists_indices(target_ns, current_ew):
-                return None
-            step = 1 if target_ns > current_ns else -1
-            for ns_index in range(current_ns + step, target_ns + step, step):
-                if self.grid.exists_indices(ns_index, current_ew):
-                    traversed.append((ns_index, current_ew))
-        return traversed
-
-    def _turn_count(self, steps: list[dict[str, Any]]) -> int:
-        if not steps:
-            return 0
-        turns = 0
-        previous = steps[0]["direction"]
-        for step in steps[1:]:
-            if step["direction"] != previous:
-                turns += 1
-            previous = step["direction"]
-        return turns
+        turn_points = [
+            (from_ns, to_ew),   # 先に 上ル/下ル してから 東入ル/西入ル
+            (to_ns, from_ew),   # 先に 東入ル/西入ル してから 上ル/下ル
+        ]
+        return any(self.grid.exists_indices(ns, ew) for ns, ew in turn_points)
