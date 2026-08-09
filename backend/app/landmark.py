@@ -28,6 +28,8 @@ class Landmark:
         self.width_km = float(raw.get("width_km", 0))
         # range: 連なりの両端。ここから角幅を出す
         self.ends = raw.get("ends")
+        # range: 尾根を何点に分けて可視判定したか（visible.json の番号に対応）
+        self.samples = int(raw.get("samples", 0))
         # kind="street" 用。これより遠いと車の流れを感じ取れないものとして捨てる
         self.max_distance = float(raw.get("max_distance", 600))
         # kind="street" 用。これより狭いと車がまとまって通らない（寺町通・三条通など）
@@ -89,9 +91,16 @@ class LandmarkService:
         """
         if landmark.kind == "range" and landmark.ends:
             here_x, here_y = self.grid.position(ns_index, ew_index)
+            # 実測データがあれば、**実際に見えている尾根の部分だけ**を返す。
+            # 尾根全体ではなく、ビルの切れ目から覗いている範囲になる。
+            hits = self.range_hits(landmark, ns_index, ew_index)
+            # 見えた点は尾根を等分した区間の中心なので、前後の半区間まで含める。
+            # そうしないと1点しか見えないときに幅ゼロになる
+            corners = ([self._ridge_point(landmark, min(hits) - 0.5),
+                        self._ridge_point(landmark, max(hits) + 0.5)] if hits
+                       else [landmark.ends["from"], landmark.ends["to"]])
             angles = []
-            for end in ("from", "to"):
-                point = landmark.ends[end]
+            for point in corners:
                 dx = float(point["x"]) - here_x
                 dy = float(point["y"]) - here_y
                 if dx == 0 and dy == 0:
@@ -113,12 +122,22 @@ class LandmarkService:
 
         return None
 
+    def range_hits(self, landmark: Landmark, ns_index: int, ew_index: int) -> list[int]:
+        """尾根のどの点が見えているか（PLATEAU + 国土地理院の実測）。"""
+        data = self._visible.get(landmark.id)
+        if not isinstance(data, dict):
+            return []
+        return list(data.get(f"{ns_index},{ew_index}", []))
+
     def range_visible(self, landmark: Landmark, ns_index: int, ew_index: int) -> bool:
         """連なりが見えるか。
 
-        単独峰と違って **通りの軸が連なりの範囲に入っているか** で判定する。
-        東山は80度以上に広がるので、東を向く通りはどれも突き当たりが東山になる。
+        実測データがあればそれを使う。無い場合だけ、通りの軸が連なりの範囲に
+        入っているかで代用する（docs/SPEC.md 2.4）。
         """
+        if landmark.id in self._visible:
+            return bool(self.range_hits(landmark, ns_index, ew_index))
+
         found = self.span(landmark, ns_index, ew_index)
         if found is None:
             return False
@@ -165,6 +184,14 @@ class LandmarkService:
             if gap <= tolerance and has_corridor():
                 return True
         return False
+
+    def _ridge_point(self, landmark: Landmark, index: float) -> dict[str, float]:
+        """尾根の index 番目の点。両端を samples 等分したもの。index は小数可。"""
+        a, b = landmark.ends["from"], landmark.ends["to"]
+        steps = max(landmark.samples - 1, 1)
+        t = min(max(index / steps, 0.0), 1.0)
+        return {"x": a["x"] + (b["x"] - a["x"]) * t,
+                "y": a["y"] + (b["y"] - a["y"]) * t}
 
     def _range_distance(self, landmark: Landmark, ns_index: int, ew_index: int) -> float:
         """連なりまでの距離。両端までの距離の小さい方を代表値にする。"""
