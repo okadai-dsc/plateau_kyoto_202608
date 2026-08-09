@@ -439,10 +439,11 @@
       "kind": "skyline"
     },
     {
-      "id": "block",
-      "name": "街区の形",
+      "id": "major_street",
+      "name": "大きい通り",
       "layer": 4,
-      "kind": "block"
+      "kind": "street",
+      "max_distance": 1200
     }
   ],
   "geo": {
@@ -452,10 +453,6 @@
       "lat": 35.0296957,
       "lng": 135.7721695
     }
-  },
-  "block": {
-    "ns_spacing": 72,
-    "ew_spacing": 136
   },
   "spots": [
     {

@@ -22,6 +22,8 @@ class Landmark:
         self.x = float(raw.get("x", 0))     # 最も東の通りから西へ(m)
         self.y = float(raw.get("y", 0))     # 最も北の通りから南へ(m)
         self.min_distance = float(raw.get("min_distance", 0))
+        # kind="street" 用。これより遠い大通りは見分けがつかないものとして捨てる
+        self.max_distance = float(raw.get("max_distance", 1200))
 
 
 class LandmarkService:
@@ -61,6 +63,84 @@ class LandmarkService:
             return {}
         return data.get(f"{ns_index},{ew_index}", {})
 
+    # ── 大きい通り ──────────────────────────────────────────
+
+    def nearest_major_street(
+        self,
+        ns_index: int,
+        ew_index: int,
+        max_distance: float = 1200.0,
+    ) -> dict[str, Any] | None:
+        """その交差点から見て、いちばん近い大きい通りがどちらにあるか。
+
+        大通りは幅も交通量もあるので、遠くからでも見分けがつく。
+        タワーや山と違って **建物の遮蔽を計算しなくてよい**。通りに沿った視線は
+        通りそのものが視線経路なので、建物は遮らないため。見通せるかどうかは
+        「途中の交差点がすべて実在するか」だけで決まる（docs/SPEC.md 2.4）。
+        """
+        self.grid.validate_indices(ns_index, ew_index)
+        ns_streets = self.grid.ns_streets
+        ew_streets = self.grid.ew_streets
+        here_x = float(ns_streets[ns_index]["pos"])   # 川端通から西へ
+        here_y = float(ew_streets[ew_index]["pos"])   # 今出川通から南へ
+
+        candidates: list[tuple[float, int, str, str]] = []
+
+        # 今いる南北の通りを south/north に見通す → 大きい東西の通りが見える
+        for index, street in enumerate(ew_streets):
+            if index == ew_index or not street["major"]:
+                continue
+            if not self._clear_along_ns(ns_index, ew_index, index):
+                continue
+            delta = float(street["pos"]) - here_y
+            candidates.append(
+                (abs(delta), -int(street["width"]), "南" if delta > 0 else "北", street["name"])
+            )
+
+        # 今いる東西の通りを east/west に見通す → 大きい南北の通りが見える
+        for index, street in enumerate(ns_streets):
+            if index == ns_index or not street["major"]:
+                continue
+            if not self._clear_along_ew(ew_index, ns_index, index):
+                continue
+            delta = float(street["pos"]) - here_x
+            candidates.append(
+                (abs(delta), -int(street["width"]), "西" if delta > 0 else "東", street["name"])
+            )
+
+        reachable = [item for item in candidates if item[0] <= max_distance]
+        if not reachable:
+            return None
+        # 近い順。同じ距離なら広い方が見分けやすいので優先する
+        distance, _, bearing, name = min(reachable)
+        return {"name": name, "bearing": bearing, "distance": round(distance)}
+
+    def _clear_along_ns(self, ns_index: int, from_ew: int, to_ew: int) -> bool:
+        """南北の通り ns_index を、from_ew から to_ew まで見通せるか。
+
+        検査するのは **大きい東西の通りとの交点だけ**。交点が無いことは
+        「細い方がそこまで届いていない」を意味するだけで、見通す側が分断されて
+        いるとは限らない。大通りは必ず通り抜けているので、そこが欠けていれば
+        見通す側が本当に切れている（御所・二条城など）と判定できる。
+        """
+        low, high = sorted((from_ew, to_ew))
+        streets = self.grid.ew_streets
+        return all(
+            self.grid.exists_indices(ns_index, i)
+            for i in range(low, high + 1)
+            if streets[i]["major"] or i == to_ew
+        )
+
+    def _clear_along_ew(self, ew_index: int, from_ns: int, to_ns: int) -> bool:
+        """東西の通り ew_index を、from_ns から to_ns まで見通せるか。"""
+        low, high = sorted((from_ns, to_ns))
+        streets = self.grid.ns_streets
+        return all(
+            self.grid.exists_indices(i, ew_index)
+            for i in range(low, high + 1)
+            if streets[i]["major"] or i == to_ns
+        )
+
     # ── 方位と距離 ──────────────────────────────────────────
 
     def bearing_and_distance(
@@ -81,8 +161,8 @@ class LandmarkService:
     def best(self, ns_index: int, ew_index: int) -> dict[str, Any]:
         """その交差点で使える、いちばん精度の高い方角の手がかり。
 
-        精度が高い順に4層。最後の「街区の形」はどこでも使えるので、
-        必ず何かは返る（docs/SPEC.md 2.4）。
+        精度が高い順に4層。最後の「大きい通り」は遮蔽の計算が要らないので
+        どこでも使え、ほぼ必ず何かは返る（docs/SPEC.md 2.4）。
         """
         for landmark in self.landmarks:
             if landmark.kind == "point":
@@ -110,13 +190,14 @@ class LandmarkService:
                     "walk": int(walk), "directions": dict(seen),
                 }
 
-            if landmark.kind == "block":
-                block = self.grid.block
+            if landmark.kind == "street":
+                found = self.nearest_major_street(ns_index, ew_index, landmark.max_distance)
+                if found is None:
+                    continue
                 return {
-                    "kind": "block", "id": landmark.id, "name": landmark.name,
-                    "layer": landmark.layer, "bearing": None,
-                    "ns_spacing": int(block.get("ns_spacing", 0)),
-                    "ew_spacing": int(block.get("ew_spacing", 0)),
+                    "kind": "street", "id": landmark.id, "name": found["name"],
+                    "layer": landmark.layer, "bearing": found["bearing"],
+                    "distance": found["distance"],
                 }
         return {"kind": "none", "layer": 99, "bearing": None}
 

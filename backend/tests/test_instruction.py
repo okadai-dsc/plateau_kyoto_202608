@@ -48,16 +48,24 @@ def test_skyline_says_where_the_mountains_are():
     assert "左前が上ル" in hint
 
 
-def test_block_shape_is_the_last_resort_and_works_anywhere():
-    """何も見えなくても、街区の形なら南北か東西かは分かる。
+def test_major_street_is_the_last_resort_and_gives_a_real_bearing():
+    """タワーも山も見えないときは、いちばん近い大通りがどちらにあるかで方角を知る。
 
-    京都の街区は東西に長いので、次の交差点までの距離が倍ちがう。
+    「街区の形」と違って **実際の方角が出る** のがこのレイヤの要点。
     """
-    hint = build_start_hint({"kind": "block", "name": "街区の形", "layer": 4,
-                             "bearing": None, "ns_spacing": 72, "ew_spacing": 136})
-    assert "72m" in hint and "東西" in hint
-    assert "136m" in hint and "南北" in hint
+    hint = build_start_hint({"kind": "street", "name": "御池通", "layer": 4,
+                             "bearing": "北", "distance": 118})
+    assert "北へ118mほどで御池通の大通りに出ます" in hint
+    # 北に大通り → その大通りの方が上ル
+    assert "御池通の方が上ルです" in hint
+
+
+def test_major_street_to_the_west_puts_north_on_the_right():
+    hint = build_start_hint({"kind": "street", "name": "堀川通", "layer": 4,
+                             "bearing": "西", "distance": 209})
+    assert "堀川通を正面に見て、右手が上ルです" in hint
 
 
 def test_nothing_at_all_falls_back_to_street_signs():
     assert "通り名" in build_start_hint(None)
+    assert "通り名" in build_start_hint({"kind": "none", "layer": 99, "bearing": None})

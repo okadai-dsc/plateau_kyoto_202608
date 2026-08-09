@@ -249,11 +249,24 @@ v1 の全機能が完成させられる。最後に名前テーブルを差し�
 
 | フィールド | 説明 |
 |---|---|
-| `landmark` | その交差点から見える**いちばん精度の高い目印**。ひとつも見えなければ `null` |
-| `landmark.layer` | 小さいほど精度が高い（L1=京都タワー、L2=大文字） |
+| `landmark` | その交差点から使える**いちばん精度の高い目印**。ひとつも無ければ `null` |
+| `landmark.kind` | `point` / `skyline` / `street`。下表参照 |
+| `landmark.layer` | 小さいほど精度が高い（L1=京都タワー、L2=大文字、L3=稜線、L4=大きい通り） |
 | `landmark.bearing` | 8方位。**近すぎて方角に使えない場合は `null`** |
-| `landmark.distance` | 目印までの距離(m) |
+| `landmark.distance` | 目印までの距離(m)。`kind` が `skyline` のときは代わりに `walk` |
 | `hint` | 表示用の完成した日本語文 |
+
+### `kind` ごとの中身
+
+| `kind` | `id` | `name` | 追加フィールド |
+|---|---|---|---|
+| `point` | `tower` / `daimonji` | 目印の名前 | `distance` |
+| `skyline` | `skyline` | `山の稜線` | `walk`（何m歩けば見えるか）, `directions` |
+| `street` | `major_street` | **その大通りの通り名**（例 `御池通`） | `distance` |
+
+> `kind: "street"` は L4「大きい通り」（docs/SPEC.md 2.4）。
+> `name` が固定文字列ではなく**実際の通り名**になる点に注意。
+> このレイヤだけ PLATEAU の可視データを使わず、グリッド構造だけで確定する。
 
 > **方位は実距離から計算する。** 添字の符号だけで判定すると、烏丸通の1本隣に
 > 立っただけで 2.6km 先のタワーが「南西」になる（実際には真南に見えている）。

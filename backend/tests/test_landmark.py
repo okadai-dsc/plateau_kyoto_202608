@@ -87,3 +87,59 @@ def test_best_withholds_the_bearing_when_the_landmark_is_too_close(tmp_path):
     assert cue["kind"] == "point"
     assert cue["bearing"] is None          # 見えてはいるが方位には使わせない
     assert cue["distance"] == 120
+
+
+MAJOR_STREET_LANDMARK = [
+    {"id": "major_street", "name": "大きい通り", "layer": 4,
+     "kind": "street", "max_distance": 1200}
+]
+
+
+def test_nearest_major_street_gives_a_real_bearing(tmp_path):
+    """「大きい通り」は、置き換え前の「街区の形」と違って実際の方角を返す。"""
+    service = make(tmp_path, ns_count=5, ew_count=5, tower=(0, 0),
+                   major_ns=[4], major_ew=[0], landmarks=MAJOR_STREET_LANDMARK)
+    # (2,2) から見て N4通 は西に240m、E0通 は北に240m。同距離なら先に見た方
+    found = service.nearest_major_street(2, 2)
+    assert found["bearing"] in ("北", "西")
+    assert found["distance"] == 240
+
+
+def test_nearest_major_street_picks_the_closest(tmp_path):
+    service = make(tmp_path, ns_count=5, ew_count=5, tower=(0, 0),
+                   major_ns=[0], major_ew=[3], landmarks=MAJOR_STREET_LANDMARK)
+    # (2,2) から N0通 は東に240m、E3通 は南に120m → 近い南を選ぶ
+    found = service.nearest_major_street(2, 2)
+    assert found == {"name": "E3通", "bearing": "南", "distance": 120}
+
+
+def test_severed_street_is_not_visible_through(tmp_path):
+    """大通りとの交点が欠けている＝そこで通りが切れている（御所・二条城など）。"""
+    exists = [[True] * 5 for _ in range(5)]
+    exists[3][2] = False          # E3通 × N2通 が無い = N2通 は E3通 に届かない
+    service = make(tmp_path, ns_count=5, ew_count=5, tower=(0, 0), exists=exists,
+                   major_ns=[], major_ew=[3], landmarks=MAJOR_STREET_LANDMARK)
+    assert service.nearest_major_street(2, 2) is None
+    # 隣の通りからは見通せる
+    assert service.nearest_major_street(1, 2)["name"] == "E3通"
+
+
+def test_major_street_covers_almost_every_real_intersection():
+    """実データで、ほぼ全ての交差点から方角が出ることを確かめる。
+
+    置き換え前の「街区の形」は bearing を返さず、実在交差点の 47% が
+    方角なしだった（docs/SPEC.md 2.4）。
+    """
+    grid = Grid()
+    service = LandmarkService(grid)
+    total = 0
+    without_bearing = 0
+    for ew in range(len(grid.ew_streets)):
+        for ns in range(len(grid.ns_streets)):
+            if not grid.exists_indices(ns, ew):
+                continue
+            total += 1
+            if service.best(ns, ew).get("bearing") is None:
+                without_bearing += 1
+    assert total > 0
+    assert without_bearing / total < 0.05
