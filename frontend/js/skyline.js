@@ -77,9 +77,11 @@ const Skyline = (() => {
 
       // 端に来たものは反対側にも出す。真後ろの「上ル」が見切れないように
       // （京都タワーが目印＝真南を向くときは必ずこうなる）
+      // 折り返し先が帯の外に出るものは描かない。目盛りだけ消えてラベルが
+      // 端に取り残される（線の無い幽霊ラベルになる）
       const positions = [x];
-      if (x < 45) positions.push(x + SPAN);
-      else if (x > SPAN - 45) positions.push(x - SPAN);
+      const mirrored = x < SPAN / 2 ? x + SPAN : x - SPAN;
+      if (mirrored >= 0 && mirrored <= SPAN) positions.push(mirrored);
 
       for (const at of positions) {
         svg.appendChild(el('line', {
