@@ -44,9 +44,8 @@ STEPS = np.unique(np.concatenate([
 
 # 地形と地表面の差がこれ以下なら「地形＝山」とみなす
 BUILDING_EPS = 1.0
-# 近くの地面の凹凸ではなく、京都の方角判断に使う山並みとして扱う地形。
+# 近くの平地の凹凸ではなく、京都の方角判断に使う山並みとして扱う地形。
 RIDGE_MIN_ELEVATION = 150.0
-RIDGE_MIN_DISTANCE = 800.0
 
 
 def main() -> int:
@@ -102,10 +101,13 @@ def main() -> int:
 
         # 建物を無視した、地形だけの山稜線。
         # 尾根は建物の裏でも続いているので、絵では連続して描いて建物を上に重ねる。
-        ridge_source = valid & (base > RIDGE_MIN_ELEVATION) & (distance > RIDGE_MIN_DISTANCE)
+        ridge_source = valid & (base > RIDGE_MIN_ELEVATION)
         ground_only = np.where(ridge_source,
                                np.degrees(np.arctan((base - eye) / distance)), -90.0)
         ridge = np.maximum(ground_only.max(axis=1), 0.0)
+        # 以前の地平線判定で山として見えていたピークは残す。
+        # 連続した地形線だけに寄せると、近い山のピークが低く潰れることがある。
+        ridge = np.maximum(ridge, np.where(kind == 2, np.maximum(peak, 0.0), 0.0))
 
         out[key] = {
             "elevation": [round(float(v), 1) for v in np.maximum(peak, 0.0)],
