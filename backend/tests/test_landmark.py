@@ -91,7 +91,7 @@ def test_best_withholds_the_bearing_when_the_landmark_is_too_close(tmp_path):
 
 MAJOR_STREET_LANDMARK = [
     {"id": "major_street", "name": "大きい通り", "layer": 4,
-     "kind": "street", "max_distance": 1200}
+     "kind": "street", "max_distance": 600, "min_width": 15}
 ]
 
 
@@ -111,6 +111,24 @@ def test_nearest_major_street_picks_the_closest(tmp_path):
     # (2,2) から N0通 は東に240m、E3通 は南に120m → 近い南を選ぶ
     found = service.nearest_major_street(2, 2)
     assert found == {"name": "E3通", "bearing": "南", "distance": 120}
+
+
+def test_narrow_street_is_not_a_traffic_cue(tmp_path):
+    """幅で選ぶ。寺町通(8m)や三条通(8m)のように major でも車が通らない通りは使わない。"""
+    service = make(tmp_path, ns_count=5, ew_count=5, tower=(0, 0),
+                   major_ns=[], major_ew=[], landmarks=MAJOR_STREET_LANDMARK)
+    # major がひとつも無い = すべて 8m = 車の流れを感じ取れる通りが無い
+    assert service.nearest_major_street(2, 2) is None
+
+
+def test_traffic_cue_is_dropped_when_too_far_to_notice(tmp_path):
+    """遠すぎる大通りは、立った場所から気づけないので使わない。"""
+    service = make(tmp_path, ns_count=12, ew_count=12, tower=(0, 0),
+                   major_ns=[11], major_ew=[11], landmarks=MAJOR_STREET_LANDMARK)
+    # (0,0) から N11通 / E11通 までは 1320m。既定の 600m を超える
+    assert service.nearest_major_street(0, 0) is None
+    # 600m 以内まで寄れば気づける
+    assert service.nearest_major_street(7, 7)["distance"] == 480
 
 
 def test_severed_street_is_not_visible_through(tmp_path):

@@ -21,7 +21,8 @@ def build_start_hint(cue: dict | None) -> str:
     """出発地点での方角の手がかり。
 
     目印は経路を選ぶためではなく、**どちらが上ルかを知るため**にある。
-    精度が高い順に4層あり、最後の「大きい通り」はどこでも使える（docs/SPEC.md 2.4）。
+    精度が高い順に4層あり、最後の「大きい通り」は
+    車がよく通っている方角で気づかせるのでどこでも使える（docs/SPEC.md 2.4）。
     """
     if not cue or cue.get("kind") in (None, "none"):
         return "通り名の標識で方角を確かめてください。"
@@ -45,9 +46,8 @@ def build_start_hint(cue: dict | None) -> str:
         return f"{bearing}に山が見えます。{facing}"
 
     if kind == "street":
-        # 大通りは幅も交通量もあるので、通り名の標識を読まなくても見分けがつく
-        distance = int(cue.get("distance", 0))
-        return f"{bearing}へ{distance}mほどで{name}の大通りに出ます。{facing}"
+        # そこまで歩かせない。立った場所から「あっちは車がよく通ってるな」で気づかせる
+        return f"{bearing}の方を車がよく通っています。あちらが{name}です。{facing}"
 
     return f"{name}が{bearing}に見えます。{facing}"
 

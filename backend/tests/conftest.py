@@ -33,14 +33,15 @@ def write_grid_data(
     major_ns_set = set(major_ns or [])
     major_ew_set = set(major_ew or [])
     streets = {
+        # 大通りは車が通る幅にする。L4 の手がかりは major ではなく width で選ぶため
         "ns": [
-            {"index": i, "name": f"N{i}通", "pos": i * step, "width": 8,
-             "major": i in major_ns_set}
+            {"index": i, "name": f"N{i}通", "pos": i * step,
+             "width": 22 if i in major_ns_set else 8, "major": i in major_ns_set}
             for i in range(ns_count)
         ],
         "ew": [
-            {"index": i, "name": f"E{i}通", "pos": i * step, "width": 8,
-             "major": i in major_ew_set}
+            {"index": i, "name": f"E{i}通", "pos": i * step,
+             "width": 22 if i in major_ew_set else 8, "major": i in major_ew_set}
             for i in range(ew_count)
         ],
         "tower": {"ns": tower[0], "ew": tower[1]},

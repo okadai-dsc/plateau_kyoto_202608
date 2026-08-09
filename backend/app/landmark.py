@@ -22,8 +22,10 @@ class Landmark:
         self.x = float(raw.get("x", 0))     # 最も東の通りから西へ(m)
         self.y = float(raw.get("y", 0))     # 最も北の通りから南へ(m)
         self.min_distance = float(raw.get("min_distance", 0))
-        # kind="street" 用。これより遠い大通りは見分けがつかないものとして捨てる
-        self.max_distance = float(raw.get("max_distance", 1200))
+        # kind="street" 用。これより遠いと車の流れを感じ取れないものとして捨てる
+        self.max_distance = float(raw.get("max_distance", 600))
+        # kind="street" 用。これより狭いと車がまとまって通らない（寺町通・三条通など）
+        self.min_width = float(raw.get("min_width", 15))
 
 
 class LandmarkService:
@@ -69,14 +71,20 @@ class LandmarkService:
         self,
         ns_index: int,
         ew_index: int,
-        max_distance: float = 1200.0,
+        max_distance: float = 600.0,
+        min_width: float = 15.0,
     ) -> dict[str, Any] | None:
-        """その交差点から見て、いちばん近い大きい通りがどちらにあるか。
+        """その交差点から見て、車がよく通る大通りがどちらにあるか。
 
-        大通りは幅も交通量もあるので、遠くからでも見分けがつく。
+        通り名の標識を読ませるのでも、そこまで歩かせるのでもない。
+        **立った場所から「あっちは車がよく通ってるな」と分かる**ことを狙う。
+        突き当たりを横切る車、空の開け方、車の音のどれかで気づける。
+
+        選ぶ基準は `major` ではなく **幅**。`major` は「通り抜ける主要な通り」の
+        意味で、寺町通(8m)や三条通(8m)のように車がほとんど通らないものも含む。
+
         タワーや山と違って **建物の遮蔽を計算しなくてよい**。通りに沿った視線は
-        通りそのものが視線経路なので、建物は遮らないため。見通せるかどうかは
-        「途中の交差点がすべて実在するか」だけで決まる（docs/SPEC.md 2.4）。
+        通りそのものが視線経路なので、建物は遮らないため（docs/SPEC.md 2.4）。
         """
         self.grid.validate_indices(ns_index, ew_index)
         ns_streets = self.grid.ns_streets
@@ -86,9 +94,9 @@ class LandmarkService:
 
         candidates: list[tuple[float, int, str, str]] = []
 
-        # 今いる南北の通りを south/north に見通す → 大きい東西の通りが見える
+        # 今いる南北の通りを south/north に見通す → 車の通る東西の通りに気づく
         for index, street in enumerate(ew_streets):
-            if index == ew_index or not street["major"]:
+            if index == ew_index or street["width"] < min_width:
                 continue
             if not self._clear_along_ns(ns_index, ew_index, index):
                 continue
@@ -97,9 +105,9 @@ class LandmarkService:
                 (abs(delta), -int(street["width"]), "南" if delta > 0 else "北", street["name"])
             )
 
-        # 今いる東西の通りを east/west に見通す → 大きい南北の通りが見える
+        # 今いる東西の通りを east/west に見通す → 車の通る南北の通りに気づく
         for index, street in enumerate(ns_streets):
-            if index == ns_index or not street["major"]:
+            if index == ns_index or street["width"] < min_width:
                 continue
             if not self._clear_along_ew(ew_index, ns_index, index):
                 continue
@@ -111,7 +119,7 @@ class LandmarkService:
         reachable = [item for item in candidates if item[0] <= max_distance]
         if not reachable:
             return None
-        # 近い順。同じ距離なら広い方が見分けやすいので優先する
+        # 近い順。同じ距離なら広い方が気づきやすいので優先する
         distance, _, bearing, name = min(reachable)
         return {"name": name, "bearing": bearing, "distance": round(distance)}
 
@@ -191,7 +199,9 @@ class LandmarkService:
                 }
 
             if landmark.kind == "street":
-                found = self.nearest_major_street(ns_index, ew_index, landmark.max_distance)
+                found = self.nearest_major_street(
+                    ns_index, ew_index, landmark.max_distance, landmark.min_width
+                )
                 if found is None:
                     continue
                 return {

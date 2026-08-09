@@ -443,7 +443,8 @@
       "name": "大きい通り",
       "layer": 4,
       "kind": "street",
-      "max_distance": 1200
+      "max_distance": 600,
+      "min_width": 15
     }
   ],
   "geo": {

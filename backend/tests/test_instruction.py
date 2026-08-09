@@ -49,15 +49,19 @@ def test_skyline_says_where_the_mountains_are():
 
 
 def test_major_street_is_the_last_resort_and_gives_a_real_bearing():
-    """タワーも山も見えないときは、いちばん近い大通りがどちらにあるかで方角を知る。
+    """タワーも山も見えないときは、車がよく通っている方角で上ルを知る。
 
     「街区の形」と違って **実際の方角が出る** のがこのレイヤの要点。
+    そこまで歩かせず、立った場所で気づけることを文にする。
     """
     hint = build_start_hint({"kind": "street", "name": "御池通", "layer": 4,
                              "bearing": "北", "distance": 118})
-    assert "北へ118mほどで御池通の大通りに出ます" in hint
+    assert "北の方を車がよく通っています" in hint
+    assert "あちらが御池通です" in hint
     # 北に大通り → その大通りの方が上ル
     assert "御池通の方が上ルです" in hint
+    # 歩かせる言い方はしない
+    assert "歩く" not in hint and "出ます" not in hint
 
 
 def test_major_street_to_the_west_puts_north_on_the_right():
