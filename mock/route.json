@@ -16,6 +16,8 @@
       "bearing": "北西",
       "distance": 14114,
       "azimuth": 297.4,
+      "azimuth_from": 289.4,
+      "angular_width": 16.1,
       "elevation": 3.5,
       "height": 924.0
     },

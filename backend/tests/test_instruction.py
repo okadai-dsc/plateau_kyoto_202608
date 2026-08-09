@@ -73,3 +73,18 @@ def test_major_street_to_the_west_puts_north_on_the_right():
 def test_nothing_at_all_falls_back_to_street_signs():
     assert "通り名" in build_start_hint(None)
     assert "通り名" in build_start_hint({"kind": "none", "layer": 99, "bearing": None})
+
+
+def test_a_range_is_described_as_a_skyline_not_a_named_peak():
+    """連なりは「正面に見て」が成り立たず、個別の山も名指しできない。"""
+    hint = build_start_hint({"kind": "range", "name": "東山", "layer": 4,
+                             "bearing": "東", "angular_width": 85.9})
+    assert "東に東山の山並みが広がっています" in hint
+    assert "そちらを向くと、左手が上ルです" in hint
+    assert "正面に見て" not in hint
+
+
+def test_a_range_straight_ahead_needs_no_rotation():
+    hint = build_start_hint({"kind": "range", "name": "北山", "layer": 5,
+                             "bearing": "北", "angular_width": 40})
+    assert "そちらが上ルです" in hint

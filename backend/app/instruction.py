@@ -45,6 +45,12 @@ def build_start_hint(cue: dict | None) -> str:
             return f"{bearing}へ{walk}mほど歩くと山が見えます。{facing}"
         return f"{bearing}に山が見えます。{facing}"
 
+    if kind == "range":
+        # 連なりは「正面に見て」が成り立たない。個別の山も名指ししない
+        if relative == "正面":
+            return f"{bearing}に{name}の山並みが広がっています。そちらが上ルです。"
+        return f"{bearing}に{name}の山並みが広がっています。そちらを向くと、{relative}が上ルです。"
+
     if kind == "street":
         # そこまで歩かせない。立った場所から「あっちは車がよく通ってるな」で気づかせる
         return f"{bearing}の方を車がよく通っています。あちらが{name}です。{facing}"

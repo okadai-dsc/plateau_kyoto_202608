@@ -255,8 +255,10 @@ v1 の全機能が完成させられる。最後に名前テーブルを差し�
 | `landmark.bearing` | 8方位。**近すぎて方角に使えない場合は `null`** |
 | `landmark.distance` | 目印までの距離(m)。`kind` が `skyline` のときは代わりに `walk` |
 | `landmark.azimuth` | **8方位に丸める前の正確な方位(度)。北=0、東=90。図に置くときはこちら** |
+| `landmark.azimuth_from` | 目印が占める範囲の左端(度) |
+| `landmark.angular_width` | **見かけの角幅(度)。**単独峰は山塊の幅から、連なりは両端から |
 | `landmark.elevation` | **見かけの高さ（仰角・度）** |
-| `landmark.height` | 目印の高さ(m)。`peak` は標高、`point` は構造物の高さ |
+| `landmark.height` | 目印の高さ(m)。`peak` / `range` は標高、`point` は構造物の高さ |
 | `hint` | 表示用の完成した日本語文 |
 
 > **`bearing` は文章用、`azimuth` は作図用。** 8方位に丸めると最大22.5度ずれるので、
@@ -268,11 +270,17 @@ v1 の全機能が完成させられる。最後に名前テーブルを差し�
 
 ### `kind` ごとの中身
 
-| `kind` | `id` | `name` | 追加フィールド |
+| `kind` | `id` | `name` | 意味 |
 |---|---|---|---|
-| `point` | `tower` / `daimonji` | 目印の名前 | `distance` |
-| `skyline` | `skyline` | `山の稜線` | `walk`（何m歩けば見えるか）, `directions` |
-| `street` | `major_street` | **その大通りの通り名**（例 `御池通`） | `distance` |
+| `point` | `tower` | 京都タワー | 人工物。可視データは PLATEAU 由来 |
+| `peak` | `atago` / `daimonji` / `hiei` | 単独峰の名前 | **一点を指せる**ので精度が高い |
+| `range` | `higashiyama` / `kitayama` | 東山 / 北山 | **連なり。**個別の山は名指ししない |
+| `skyline` | `skyline` | 山の稜線 | `walk`（何m歩けば見えるか）, `directions` |
+| `street` | `major_street` | その大通りの通り名 | 車の流れで気づく（下記） |
+
+> **`range` は角幅が広い。**東山は洛中から見て 80度以上を占める。
+> 「東山を正面に見て」という言い方は成り立たないので、文言も別にしている。
+> 単独峰は `angular_width` が 10〜35度程度。
 
 > `kind: "street"` は L4「大きい通り」（docs/SPEC.md 2.4）。
 > `name` が固定文字列ではなく**実際の通り名**になる点に注意。
