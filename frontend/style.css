@@ -139,6 +139,8 @@ body.is-intro .app-main {
   width: 5.4rem;
   height: 5.4rem;
   margin: 0 auto 1.2rem;
+  border-radius: 50%;
+  overflow: hidden;
   object-fit: contain;
 }
 
