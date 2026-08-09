@@ -23,21 +23,29 @@ def write_grid_data(
     tower: tuple[int, int],
     exists: list[list[bool]] | None = None,
     visible: list[list[bool]] | None = None,
+    major_ns: list[int] | None = None,
+    major_ew: list[int] | None = None,
+    landmarks: list[dict] | None = None,
 ) -> None:
     data_dir.mkdir(parents=True, exist_ok=True)
     # pos は通り同士の相対距離(m)。方位の計算に使う（docs/API.md 2.1）
     step = 120
+    major_ns_set = set(major_ns or [])
+    major_ew_set = set(major_ew or [])
     streets = {
+        # 大通りは車が通る幅にする。L4 の手がかりは major ではなく width で選ぶため
         "ns": [
-            {"index": i, "name": f"N{i}通", "pos": i * step, "width": 8}
+            {"index": i, "name": f"N{i}通", "pos": i * step,
+             "width": 22 if i in major_ns_set else 8, "major": i in major_ns_set}
             for i in range(ns_count)
         ],
         "ew": [
-            {"index": i, "name": f"E{i}通", "pos": i * step, "width": 8}
+            {"index": i, "name": f"E{i}通", "pos": i * step,
+             "width": 22 if i in major_ew_set else 8, "major": i in major_ew_set}
             for i in range(ew_count)
         ],
         "tower": {"ns": tower[0], "ew": tower[1]},
-        "landmarks": [
+        "landmarks": landmarks if landmarks is not None else [
             {
                 "id": "tower",
                 "name": "京都タワー",

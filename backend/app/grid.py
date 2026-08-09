@@ -31,6 +31,8 @@ class Grid:
         self._landmarks: list[dict[str, Any]] = streets_data.get("landmarks", [])
         self._block: dict[str, Any] = streets_data.get("block", {})
         self._geo: dict[str, Any] = streets_data.get("geo", {})
+        # 洛中の地盤高(m)。山の仰角を出すのに使う。概算で、dem で置き換える前提
+        self._ground_height = float(streets_data.get("ground_height", 50))
 
         self._validate_streets()
         self._validate_matrix(self._exists, "exists")
@@ -62,6 +64,11 @@ class Grid:
         """緯度経度を内部のメートル座標へ寄せるための基準点。"""
         reference = self._geo.get("reference")
         return None if reference is None else reference.copy()
+
+    @property
+    def ground_height(self) -> float:
+        """洛中の地盤高(m)。山の仰角の基準。**概算**で、dem で置き換える（SPEC 2.5）。"""
+        return self._ground_height
 
     @property
     def block(self) -> dict[str, Any]:
