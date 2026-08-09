@@ -421,7 +421,8 @@
       "kind": "point",
       "x": 1137,
       "y": 4724,
-      "min_distance": 200
+      "min_distance": 200,
+      "height": 131
     },
     {
       "id": "atago",
@@ -430,7 +431,8 @@
       "kind": "peak",
       "x": 12830,
       "y": -3610,
-      "min_distance": 0
+      "min_distance": 0,
+      "height": 924
     },
     {
       "id": "daimonji",
@@ -439,7 +441,8 @@
       "kind": "peak",
       "x": -2721,
       "y": 300,
-      "min_distance": 0
+      "min_distance": 0,
+      "height": 465
     },
     {
       "id": "kitayama",
@@ -448,7 +451,8 @@
       "kind": "peak",
       "x": 1230,
       "y": -13340,
-      "min_distance": 0
+      "min_distance": 0,
+      "height": 788
     },
     {
       "id": "hiei",
@@ -457,7 +461,8 @@
       "kind": "peak",
       "x": -5510,
       "y": -4740,
-      "min_distance": 0
+      "min_distance": 0,
+      "height": 848
     },
     {
       "id": "skyline",
@@ -593,5 +598,6 @@
         ]
       }
     }
-  ]
+  ],
+  "ground_height": 50
 }

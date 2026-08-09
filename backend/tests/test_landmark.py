@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from backend.app.grid import Grid
-from backend.app.landmark import LandmarkService
+from backend.app.landmark import Landmark, LandmarkService
 from .conftest import write_grid_data
 
 
@@ -161,3 +161,41 @@ def test_major_street_covers_almost_every_real_intersection():
                 without_bearing += 1
     assert total > 0
     assert without_bearing / total < 0.05
+
+
+def test_azimuth_is_finer_than_the_eight_directions():
+    """図に置くための正確な方位(度)が、8方位に丸める前の値として返る。"""
+    grid = Grid()
+    service = LandmarkService(grid)
+    ns = [s["name"] for s in grid.ns_streets]
+    ew = [s["name"] for s in grid.ew_streets]
+    cue = service.best(ns.index("川端通"), ew.index("丸太町通"))
+
+    assert cue["name"] == "愛宕山"
+    assert cue["bearing"] == "西"           # 8方位に丸めると西
+    assert 270 < cue["azimuth"] < 315       # 実際は西より北寄り
+    # 丸めた方位と食い違わないこと
+    assert abs(((cue["azimuth"] - 270) + 180) % 360 - 180) <= 22.5
+
+
+def test_mountains_are_low_and_wide():
+    """山の仰角は数度しかない。描画で縦を誇張する必要がある根拠（SPEC 2.6）。"""
+    grid = Grid()
+    service = LandmarkService(grid)
+    ns = [s["name"] for s in grid.ns_streets]
+    ew = [s["name"] for s in grid.ew_streets]
+    cue = service.best(ns.index("烏丸通"), ew.index("四条通"))
+    assert cue["elevation"] is not None
+    assert 0 < cue["elevation"] < 10
+
+
+def test_peak_elevation_subtracts_ground_but_structure_does_not(tmp_path):
+    """山は標高なので地盤高を引く。京都タワーは構造物の高さなので引かない。"""
+    service = make(tmp_path, ns_count=3, ew_count=3, tower=(0, 0))
+    tower = service.landmarks[0]
+    tower.height = 131
+    tower.kind = "point"
+    peak = Landmark({"id": "p", "name": "山", "layer": 2, "kind": "peak", "height": 131})
+
+    # 同じ高さ・同じ距離でも、山は地盤高(50m)ぶん低く見える
+    assert service.elevation_angle(tower, 1000) > service.elevation_angle(peak, 1000)

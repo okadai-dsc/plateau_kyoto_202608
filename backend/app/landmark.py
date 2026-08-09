@@ -22,6 +22,8 @@ class Landmark:
         self.x = float(raw.get("x", 0))     # 最も東の通りから西へ(m)
         self.y = float(raw.get("y", 0))     # 最も北の通りから南へ(m)
         self.min_distance = float(raw.get("min_distance", 0))
+        # peak なら標高(m)、point なら構造物の高さ(m)。仰角の計算に使う
+        self.height = float(raw.get("height", 0))
         # kind="street" 用。これより遠いと車の流れを感じ取れないものとして捨てる
         self.max_distance = float(raw.get("max_distance", 600))
         # kind="street" 用。これより狭いと車がまとまって通らない（寺町通・三条通など）
@@ -245,6 +247,24 @@ class LandmarkService:
         angle = math.degrees(math.atan2(-dx, -dy)) % 360   # 北=0、東=90
         return DIRECTIONS[round(angle / 45) % 8], distance
 
+    EYE_HEIGHT = 1.5
+
+    def elevation_angle(self, landmark: Landmark, distance: float) -> float | None:
+        """目印の見かけの高さ（仰角・度）。
+
+        山は 4〜5度しかないのに角幅は 10〜36度ある。**低くて広い**ので、
+        画面に描くときは縦を誇張しないと平らな線にしかならない（docs/SPEC.md 2.6）。
+
+        peak は標高なので地盤高を引く。point（京都タワー）は構造物の高さなので引かない。
+        """
+        if not landmark.height or distance <= 0:
+            return None
+        base = self.grid.ground_height if landmark.kind == "peak" else 0.0
+        rise = landmark.height - base - self.EYE_HEIGHT
+        if rise <= 0:
+            return None
+        return round(math.degrees(math.atan(rise / distance)), 1)
+
     def best(self, ns_index: int, ew_index: int) -> dict[str, Any]:
         """その交差点で使える、いちばん精度の高い方角の手がかり。
 
@@ -261,11 +281,16 @@ class LandmarkService:
                 bearing, distance = self.bearing_and_distance(landmark, ns_index, ew_index)
                 # 近すぎると見上げる形になり、水平方向が読みにくい
                 too_close = distance < landmark.min_distance
+                azimuth = self._angle_to(landmark, ns_index, ew_index)
                 return {
                     "kind": landmark.kind, "id": landmark.id, "name": landmark.name,
                     "layer": landmark.layer,
                     "bearing": None if too_close else bearing,
                     "distance": round(distance),
+                    # 8方位に丸める前の正確な方位。図に置くときはこちらを使う
+                    "azimuth": None if azimuth is None else round(azimuth, 1),
+                    "elevation": self.elevation_angle(landmark, distance),
+                    "height": landmark.height or None,
                 }
 
             if landmark.kind == "skyline":
