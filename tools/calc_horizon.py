@@ -14,6 +14,7 @@
 
 出力 data/osm/horizon.json:
   交差点ごとに 360個の仰角(度) と、その正体（0=空/1=建物/2=山）
+  さらに ridge として、建物を無視した地形だけの稜線も持つ
 
   python3 tools/calc_horizon.py
 """
@@ -43,6 +44,9 @@ STEPS = np.unique(np.concatenate([
 
 # 地形と地表面の差がこれ以下なら「地形＝山」とみなす
 BUILDING_EPS = 1.0
+# 近くの地面の凹凸ではなく、京都の方角判断に使う山並みとして扱う地形。
+RIDGE_MIN_ELEVATION = 150.0
+RIDGE_MIN_DISTANCE = 800.0
 
 
 def main() -> int:
@@ -96,11 +100,20 @@ def main() -> int:
         is_building = (top[rows, best] - base[rows, best]) > BUILDING_EPS
         kind = np.where(peak <= 0.05, 0, np.where(is_building, 1, 2))
 
+        # 建物を無視した、地形だけの山稜線。
+        # 尾根は建物の裏でも続いているので、絵では連続して描いて建物を上に重ねる。
+        ridge_source = valid & (base > RIDGE_MIN_ELEVATION) & (distance > RIDGE_MIN_DISTANCE)
+        ground_only = np.where(ridge_source,
+                               np.degrees(np.arctan((base - eye) / distance)), -90.0)
+        ridge = np.maximum(ground_only.max(axis=1), 0.0)
+
         out[key] = {
             "elevation": [round(float(v), 1) for v in np.maximum(peak, 0.0)],
             "kind": [int(v) for v in kind],
             # 地平線を作っている地物までの距離(m)。遠いほど霞ませて奥行きを出す
             "distance": [int(STEPS[b]) for b in best],
+            # 建物を無視した地形だけの山稜線。建物に隠れる部分も含めて連続している
+            "ridge": [round(float(v), 1) for v in ridge],
         }
         if index % 50 == 0 or index == total:
             print(f"  [{index}/{total}]", flush=True)
