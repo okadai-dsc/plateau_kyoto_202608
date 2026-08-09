@@ -199,3 +199,43 @@ def test_peak_elevation_subtracts_ground_but_structure_does_not(tmp_path):
 
     # 同じ高さ・同じ距離でも、山は地盤高(50m)ぶん低く見える
     assert service.elevation_angle(tower, 1000) > service.elevation_angle(peak, 1000)
+
+
+def test_range_spans_a_wide_arc_and_a_peak_does_not():
+    """東山は連なりなので水平方向に広く占める。単独峰とは扱いが違う。
+
+    洛中の東西の通りはすべて東山に突き当たるので、点では表現できない
+    （docs/SPEC.md 2.4）。
+    """
+    grid = Grid()
+    service = LandmarkService(grid)
+    ns = [s["name"] for s in grid.ns_streets]
+    ew = [s["name"] for s in grid.ew_streets]
+    at = (ns.index("千本通"), ew.index("七条通"))
+
+    by_id = {landmark.id: landmark for landmark in service.landmarks}
+    higashiyama = service.span(by_id["higashiyama"], *at)
+    atago = service.span(by_id["atago"], *at)
+
+    assert higashiyama["width"] > 60          # 連なり
+    assert atago["width"] < 30                # 単独峰
+    # 東を向いた先が東山の範囲に入っている
+    assert (90 - higashiyama["start"]) % 360 <= higashiyama["width"]
+
+
+def test_the_range_to_the_east_is_the_cue_where_no_peak_is_visible():
+    """千本通×七条通 では東山が選ばれる。
+
+    七条通は東へ真っ直ぐ伸びて東山に突き当たる。以前は東山を持っておらず、
+    北の山並みを指していた（実際に見えるのは東）。
+    """
+    grid = Grid()
+    service = LandmarkService(grid)
+    ns = [s["name"] for s in grid.ns_streets]
+    ew = [s["name"] for s in grid.ew_streets]
+    cue = service.best(ns.index("千本通"), ew.index("七条通"))
+
+    assert cue["kind"] == "range"
+    assert cue["name"] == "東山"
+    assert cue["bearing"] == "東"
+    assert cue["angular_width"] > 60

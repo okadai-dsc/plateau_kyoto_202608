@@ -800,6 +800,11 @@ body.is-intro .app-main {
   fill: var(--accent);
 }
 
+/* 連なりは「方角しか分からない」ので、単独峰より控えめに見せる */
+.skyline-mark.is-range {
+  fill: var(--major-line);
+}
+
 .skyline-name {
   fill: var(--ink);
   font-weight: 700;

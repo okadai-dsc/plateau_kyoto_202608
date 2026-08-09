@@ -429,51 +429,84 @@
       "name": "愛宕山",
       "layer": 2,
       "kind": "peak",
+      "height": 924,
+      "min_distance": 0,
       "x": 12830,
       "y": -3610,
-      "min_distance": 0,
-      "height": 924
+      "width_km": 4
     },
     {
       "id": "daimonji",
       "name": "大文字",
       "layer": 3,
       "kind": "peak",
+      "height": 465,
+      "min_distance": 0,
       "x": -2721,
       "y": 300,
+      "width_km": 3
+    },
+    {
+      "id": "higashiyama",
+      "name": "東山",
+      "layer": 4,
+      "kind": "range",
+      "height": 250,
       "min_distance": 0,
-      "height": 465
+      "ends": {
+        "from": {
+          "x": -5510,
+          "y": -4740
+        },
+        "to": {
+          "x": -480,
+          "y": 6930
+        }
+      },
+      "x": -2995.0,
+      "y": 1095.0
     },
     {
       "id": "kitayama",
-      "name": "北山（天ヶ岳）",
-      "layer": 4,
-      "kind": "peak",
-      "x": 1230,
-      "y": -13340,
+      "name": "北山",
+      "layer": 5,
+      "kind": "range",
+      "height": 700,
       "min_distance": 0,
-      "height": 788
+      "ends": {
+        "from": {
+          "x": 9730,
+          "y": -16090
+        },
+        "to": {
+          "x": -5134,
+          "y": -7878
+        }
+      },
+      "x": 2298.0,
+      "y": -11984.0
     },
     {
       "id": "hiei",
       "name": "比叡山",
-      "layer": 5,
+      "layer": 6,
       "kind": "peak",
+      "height": 848,
+      "min_distance": 0,
       "x": -5510,
       "y": -4740,
-      "min_distance": 0,
-      "height": 848
+      "width_km": 4
     },
     {
       "id": "skyline",
       "name": "山の稜線",
-      "layer": 6,
+      "layer": 7,
       "kind": "skyline"
     },
     {
       "id": "major_street",
       "name": "大きい通り",
-      "layer": 7,
+      "layer": 8,
       "kind": "street",
       "max_distance": 600,
       "min_width": 15

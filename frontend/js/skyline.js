@@ -93,16 +93,32 @@ const Skyline = (() => {
       }
     }
 
-    // 目印。段階Aなので形は持たない（山の輪郭は段階B以降・docs/SPEC.md 2.6）
+    // 目印の形（docs/SPEC.md 2.6 段階B）。
+    // 見かけの角幅は度で来るので、横1単位=1度の帯にそのまま置ける。
     const peakY = HORIZON - elevation * EXAGGERATION;
     const center = SPAN / 2;
-    const isPeak = landmark.kind === 'peak';
-    if (isPeak) {
+    const width = typeof landmark.angular_width === 'number' ? landmark.angular_width : 0;
+    const half = Math.max(width / 2, 4);
+
+    if (landmark.kind === 'range') {
+      // 連なりは台形。稜線なので頂点を持たず、肩を落とした形にする
+      const shoulder = Math.min(half * 0.35, 18);
       svg.appendChild(el('polygon', {
-        points: `${center - 13},${HORIZON} ${center},${peakY} ${center + 13},${HORIZON}`,
+        points: [
+          `${center - half},${HORIZON}`,
+          `${center - half + shoulder},${peakY}`,
+          `${center + half - shoulder},${peakY}`,
+          `${center + half},${HORIZON}`,
+        ].join(' '),
+        class: 'skyline-mark is-range',
+      }));
+    } else if (landmark.kind === 'peak') {
+      svg.appendChild(el('polygon', {
+        points: `${center - half},${HORIZON} ${center},${peakY} ${center + half},${HORIZON}`,
         class: 'skyline-mark',
       }));
     } else {
+      // 人工物（京都タワー）は細い縦棒
       svg.appendChild(el('rect', {
         x: center - 3, y: peakY, width: 6, height: HORIZON - peakY, class: 'skyline-mark',
       }));
@@ -115,8 +131,10 @@ const Skyline = (() => {
 
     const note = document.createElement('p');
     note.className = 'skyline-note';
+    const widthText = width ? ` / 幅${Math.round(width)}°` : '';
     note.textContent =
-      `方位${Math.round(azimuth)}° / 仰角${elevation}°（高さは${EXAGGERATION}倍に強調）`;
+      `方位${Math.round(azimuth)}° / 仰角${elevation}°${widthText}`
+      + `（高さは${EXAGGERATION}倍に強調）`;
     container.appendChild(note);
 
     container.hidden = false;

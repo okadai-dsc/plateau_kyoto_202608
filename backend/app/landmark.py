@@ -22,8 +22,12 @@ class Landmark:
         self.x = float(raw.get("x", 0))     # 最も東の通りから西へ(m)
         self.y = float(raw.get("y", 0))     # 最も北の通りから南へ(m)
         self.min_distance = float(raw.get("min_distance", 0))
-        # peak なら標高(m)、point なら構造物の高さ(m)。仰角の計算に使う
+        # peak / range なら標高(m)、point なら構造物の高さ(m)。仰角の計算に使う
         self.height = float(raw.get("height", 0))
+        # peak: 山塊の幅(km)。見かけの角幅を出すのに使う（docs/SPEC.md 2.6 段階B）
+        self.width_km = float(raw.get("width_km", 0))
+        # range: 連なりの両端。ここから角幅を出す
+        self.ends = raw.get("ends")
         # kind="street" 用。これより遠いと車の流れを感じ取れないものとして捨てる
         self.max_distance = float(raw.get("max_distance", 600))
         # kind="street" 用。これより狭いと車がまとまって通らない（寺町通・三条通など）
@@ -77,6 +81,61 @@ class LandmarkService:
     # 見通しがこれだけ続いていれば、手前の建物より山の方が高く見える
     MIN_CORRIDOR = 400.0
 
+    def span(self, landmark: Landmark, ns_index: int, ew_index: int) -> dict[str, float] | None:
+        """目印が水平方向に占める範囲（度）。
+
+        単独峰は山塊の幅から、連なりは両端の方位から出す。
+        東山は洛中から見て **80度以上** を占めるので、点では表現できない。
+        """
+        if landmark.kind == "range" and landmark.ends:
+            here_x, here_y = self.grid.position(ns_index, ew_index)
+            angles = []
+            for end in ("from", "to"):
+                point = landmark.ends[end]
+                dx = float(point["x"]) - here_x
+                dy = float(point["y"]) - here_y
+                if dx == 0 and dy == 0:
+                    return None
+                angles.append(math.degrees(math.atan2(-dx, -dy)) % 360)
+            start, end_angle = angles
+            width = (end_angle - start) % 360
+            if width > 180:                      # 短い方の弧を採る
+                start, width = end_angle, 360 - width
+            return {"start": start, "width": width}
+
+        if landmark.kind == "peak" and landmark.width_km:
+            azimuth = self._angle_to(landmark, ns_index, ew_index)
+            _, distance = self.bearing_and_distance(landmark, ns_index, ew_index)
+            if azimuth is None or distance <= 0:
+                return None
+            width = math.degrees(2 * math.atan(landmark.width_km * 500 / distance))
+            return {"start": (azimuth - width / 2) % 360, "width": width}
+
+        return None
+
+    def range_visible(self, landmark: Landmark, ns_index: int, ew_index: int) -> bool:
+        """連なりが見えるか。
+
+        単独峰と違って **通りの軸が連なりの範囲に入っているか** で判定する。
+        東山は80度以上に広がるので、東を向く通りはどれも突き当たりが東山になる。
+        """
+        found = self.span(landmark, ns_index, ew_index)
+        if found is None:
+            return False
+        for axis_angle, has_corridor in self._axes(ns_index, ew_index):
+            if (axis_angle - found["start"]) % 360 <= found["width"] and has_corridor():
+                return True
+        return False
+
+    def _axes(self, ns_index: int, ew_index: int):
+        """交差点から見通せる4方向と、その向きに通りが抜けているかの判定。"""
+        return (
+            (0.0, lambda: self._corridor_ns(ns_index, ew_index, -1)),     # 北
+            (90.0, lambda: self._corridor_ew(ns_index, ew_index, -1)),    # 東
+            (180.0, lambda: self._corridor_ns(ns_index, ew_index, 1)),    # 南
+            (270.0, lambda: self._corridor_ew(ns_index, ew_index, 1)),    # 西
+        )
+
     def peak_visible(self, landmark: Landmark, ns_index: int, ew_index: int) -> bool:
         """山が見えるか。
 
@@ -101,16 +160,20 @@ class LandmarkService:
         )
         tolerance = self.OPEN_TOLERANCE if widest >= self.OPEN_WIDTH else self.AXIS_TOLERANCE
 
-        for axis_angle, has_corridor in (
-            (0.0, lambda: self._corridor_ns(ns_index, ew_index, -1)),     # 北
-            (90.0, lambda: self._corridor_ew(ns_index, ew_index, -1)),    # 東
-            (180.0, lambda: self._corridor_ns(ns_index, ew_index, 1)),    # 南
-            (270.0, lambda: self._corridor_ew(ns_index, ew_index, 1)),    # 西
-        ):
+        for axis_angle, has_corridor in self._axes(ns_index, ew_index):
             gap = abs((bearing_angle - axis_angle + 180) % 360 - 180)
             if gap <= tolerance and has_corridor():
                 return True
         return False
+
+    def _range_distance(self, landmark: Landmark, ns_index: int, ew_index: int) -> float:
+        """連なりまでの距離。両端までの距離の小さい方を代表値にする。"""
+        here_x, here_y = self.grid.position(ns_index, ew_index)
+        return min(
+            math.hypot(float(landmark.ends[end]["x"]) - here_x,
+                       float(landmark.ends[end]["y"]) - here_y)
+            for end in ("from", "to")
+        )
 
     def _angle_to(self, landmark: Landmark, ns_index: int, ew_index: int) -> float | None:
         here_x, here_y = self.grid.position(ns_index, ew_index)
@@ -272,6 +335,25 @@ class LandmarkService:
         どこでも使え、ほぼ必ず何かは返る（docs/SPEC.md 2.4）。
         """
         for landmark in self.landmarks:
+            if landmark.kind == "range":
+                if not self.range_visible(landmark, ns_index, ew_index):
+                    continue
+                found = self.span(landmark, ns_index, ew_index)
+                middle = (found["start"] + found["width"] / 2) % 360
+                # 連なりまでの距離は中心方向のもので代表させる
+                distance = self._range_distance(landmark, ns_index, ew_index)
+                return {
+                    "kind": "range", "id": landmark.id, "name": landmark.name,
+                    "layer": landmark.layer,
+                    "bearing": DIRECTIONS[round(middle / 45) % 8],
+                    "distance": round(distance),
+                    "azimuth": round(middle, 1),
+                    "azimuth_from": round(found["start"], 1),
+                    "angular_width": round(found["width"], 1),
+                    "elevation": self.elevation_angle(landmark, distance),
+                    "height": landmark.height or None,
+                }
+
             if landmark.kind in ("point", "peak"):
                 if landmark.kind == "peak":
                     if not self.peak_visible(landmark, ns_index, ew_index):
@@ -282,6 +364,7 @@ class LandmarkService:
                 # 近すぎると見上げる形になり、水平方向が読みにくい
                 too_close = distance < landmark.min_distance
                 azimuth = self._angle_to(landmark, ns_index, ew_index)
+                found = self.span(landmark, ns_index, ew_index)
                 return {
                     "kind": landmark.kind, "id": landmark.id, "name": landmark.name,
                     "layer": landmark.layer,
@@ -289,6 +372,8 @@ class LandmarkService:
                     "distance": round(distance),
                     # 8方位に丸める前の正確な方位。図に置くときはこちらを使う
                     "azimuth": None if azimuth is None else round(azimuth, 1),
+                    "azimuth_from": None if found is None else round(found["start"], 1),
+                    "angular_width": None if found is None else round(found["width"], 1),
                     "elevation": self.elevation_angle(landmark, distance),
                     "height": landmark.height or None,
                 }
