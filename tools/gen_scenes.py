@@ -39,6 +39,7 @@ BUILDING = (168, 164, 156)
 LIGHT = (-0.42, 0.25, 0.87)
 HAZE_FROM, HAZE_TO = 40.0, 900.0    # この距離で空の色に溶けきる
 RIDGE_MIN = 0.05       # ほぼ地平線上の微小な地形ノイズは山として塗らない
+RIDGE_BRIDGE_GAP = 10  # 山に挟まれた短い切れ目は、同じ尾根として補間する
 
 
 def blend(colour, other, t):
@@ -52,6 +53,35 @@ def tone(colour, level):
 def hazed(colour, distance):
     t = min(max((distance - HAZE_FROM) / (HAZE_TO - HAZE_FROM), 0.0), 1.0)
     return "#%02x%02x%02x" % blend(colour, SKY, t * 0.72)
+
+
+def ridge_heights(profile, azimuth):
+    heights = profile.get("ridge") or profile["elevation"]
+    offsets = list(range(-40, 41))
+    values = []
+    for offset in offsets:
+        a = (azimuth + offset) % 360
+        height = heights[a]
+        if profile["kind"][a] == 2:
+            height = max(height, profile["elevation"][a])
+        values.append(height if height > RIDGE_MIN else 0.0)
+
+    index = 0
+    while index < len(values):
+        if values[index] > 0.0:
+            index += 1
+            continue
+        start = index
+        while index < len(values) and values[index] == 0.0:
+            index += 1
+        gap = index - start
+        if start == 0 or index == len(values) or gap > RIDGE_BRIDGE_GAP:
+            continue
+        left, right = values[start - 1], values[index]
+        for step in range(gap):
+            t = (step + 1) / (gap + 1)
+            values[start + step] = left + (right - left) * t
+    return zip(offsets, values)
 
 
 def load_rings(box):
@@ -116,15 +146,8 @@ def scene(lat, lon, ground, azimuth, profile, verts, offsets, table,
     # 山。**建物を無視した地形だけの稜線**を連続して描く。
     # 尾根は建物の裏でも続いているので、断片で描くと山が切れて見える。
     # 手前の建物は後から重ねるので、隠れるべき部分は自然に隠れる。
-    heights = profile.get("ridge") or profile["elevation"]
     run = []
-    for offset in list(range(-40, 41)) + [None]:
-        height = 0.0
-        if offset is not None:
-            a = (azimuth + offset) % 360
-            height = heights[a]
-            if profile["kind"][a] == 2:
-                height = max(height, profile["elevation"][a])
+    for offset, height in list(ridge_heights(profile, azimuth)) + [(None, 0.0)]:
         if offset is not None and height > RIDGE_MIN:
             run.append((CX + math.tan(math.radians(offset)) * FOCAL,
                         CY - math.tan(math.radians(height)) * FOCAL))

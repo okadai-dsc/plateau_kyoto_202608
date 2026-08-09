@@ -35,6 +35,7 @@ WIDTH, HEIGHT = 900, 480
 CX, CY = WIDTH / 2, HEIGHT * 0.62      # 消失点。少し下げると見上げる感じになる
 FOCAL = (WIDTH / 2) / math.tan(math.radians(HFOV / 2))
 RIDGE_MIN = 0.05
+RIDGE_BRIDGE_GAP = 10
 
 POLYGON = re.compile(r"<gml:Polygon\b.*?</gml:Polygon>", re.S)
 POSLIST = re.compile(r"<gml:posList[^>]*>([^<]+)</gml:posList>")
@@ -109,6 +110,35 @@ def project(point, origin, ground, forward, right):
     return (CX + side / depth * FOCAL, CY - up / depth * FOCAL, depth)
 
 
+def ridge_heights(profile, azimuth):
+    heights = profile.get("ridge") or profile["elevation"]
+    offsets = list(range(-40, 41))
+    values = []
+    for offset in offsets:
+        a = (azimuth + offset) % 360
+        height = heights[a]
+        if profile["kind"][a] == 2:
+            height = max(height, profile["elevation"][a])
+        values.append(height if height > RIDGE_MIN else 0.0)
+
+    index = 0
+    while index < len(values):
+        if values[index] > 0.0:
+            index += 1
+            continue
+        start = index
+        while index < len(values) and values[index] == 0.0:
+            index += 1
+        gap = index - start
+        if start == 0 or index == len(values) or gap > RIDGE_BRIDGE_GAP:
+            continue
+        left, right = values[start - 1], values[index]
+        for step in range(gap):
+            t = (step + 1) / (gap + 1)
+            values[start + step] = left + (right - left) * t
+    return zip(offsets, values)
+
+
 def draw(lat, lon, ground, azimuth, profile, label):
     angle = math.radians(azimuth)
     forward = (math.sin(angle), math.cos(angle))
@@ -119,12 +149,7 @@ def draw(lat, lon, ground, azimuth, profile, label):
 
     # 山の稜線。建物を無視した地形だけの稜線を同じカメラに乗せる
     ridge = []
-    heights = profile.get("ridge") or profile["elevation"]
-    for offset in range(-40, 41):
-        a = (azimuth + offset) % 360
-        height = heights[a]
-        if profile["kind"][a] == 2:
-            height = max(height, profile["elevation"][a])
+    for offset, height in ridge_heights(profile, azimuth):
         if height <= RIDGE_MIN:
             ridge.append(None)
             continue
