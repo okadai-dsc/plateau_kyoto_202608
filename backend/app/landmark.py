@@ -65,6 +65,85 @@ class LandmarkService:
             return {}
         return data.get(f"{ns_index},{ew_index}", {})
 
+    # ── 山 ──────────────────────────────────────────────────
+
+    # 通りの軸（北/東/南/西）からこれだけ外れた山は、通りの突き当たりに来ない
+    AXIS_TOLERANCE = 30.0
+    # 幅がこれ以上の通りは空が開けるので、斜めの山も見える
+    OPEN_WIDTH = 40.0
+    OPEN_TOLERANCE = 60.0
+    # 見通しがこれだけ続いていれば、手前の建物より山の方が高く見える
+    MIN_CORRIDOR = 400.0
+
+    def peak_visible(self, landmark: Landmark, ns_index: int, ew_index: int) -> bool:
+        """山が見えるか。
+
+        PLATEAU の可視マスクがあればそれを使う。無ければ **通りの見通し**から判定する。
+        山は仰角4〜5度あるのに対し、京都は高さ規制(15m/31m)が効いていて
+        500m先のビルでも3.5度以下。**通りに沿って数百m抜けていれば山は上に出る**。
+
+        逆に言うと、通りの軸から外れた方角の山は突き当たりに来ないので見えない
+        （比叡山は北東なのでどの通りの正面にも来ない）。
+        幅の広い通りに立っているときだけ、空が開けるぶん斜めも許す。
+        """
+        if landmark.id in self._visible:
+            return self.visible(landmark.id, ns_index, ew_index)
+
+        bearing_angle = self._angle_to(landmark, ns_index, ew_index)
+        if bearing_angle is None:
+            return False
+
+        widest = max(
+            float(self.grid.ns_streets[ns_index]["width"]),
+            float(self.grid.ew_streets[ew_index]["width"]),
+        )
+        tolerance = self.OPEN_TOLERANCE if widest >= self.OPEN_WIDTH else self.AXIS_TOLERANCE
+
+        for axis_angle, has_corridor in (
+            (0.0, lambda: self._corridor_ns(ns_index, ew_index, -1)),     # 北
+            (90.0, lambda: self._corridor_ew(ns_index, ew_index, -1)),    # 東
+            (180.0, lambda: self._corridor_ns(ns_index, ew_index, 1)),    # 南
+            (270.0, lambda: self._corridor_ew(ns_index, ew_index, 1)),    # 西
+        ):
+            gap = abs((bearing_angle - axis_angle + 180) % 360 - 180)
+            if gap <= tolerance and has_corridor():
+                return True
+        return False
+
+    def _angle_to(self, landmark: Landmark, ns_index: int, ew_index: int) -> float | None:
+        here_x, here_y = self.grid.position(ns_index, ew_index)
+        dx = landmark.x - here_x
+        dy = landmark.y - here_y
+        if dx == 0 and dy == 0:
+            return None
+        return math.degrees(math.atan2(-dx, -dy)) % 360
+
+    def _corridor_ns(self, ns_index: int, ew_index: int, step: int) -> bool:
+        """南北の通りが、その向きに MIN_CORRIDOR 以上まっすぐ抜けているか。"""
+        streets = self.grid.ew_streets
+        start = float(streets[ew_index]["pos"])
+        index = ew_index
+        while 0 <= index + step < len(streets):
+            index += step
+            if streets[index]["major"] and not self.grid.exists_indices(ns_index, index):
+                break
+            if abs(float(streets[index]["pos"]) - start) >= self.MIN_CORRIDOR:
+                return True
+        return False
+
+    def _corridor_ew(self, ns_index: int, ew_index: int, step: int) -> bool:
+        """東西の通りが、その向きに MIN_CORRIDOR 以上まっすぐ抜けているか。"""
+        streets = self.grid.ns_streets
+        start = float(streets[ns_index]["pos"])
+        index = ns_index
+        while 0 <= index + step < len(streets):
+            index += step
+            if streets[index]["major"] and not self.grid.exists_indices(index, ew_index):
+                break
+            if abs(float(streets[index]["pos"]) - start) >= self.MIN_CORRIDOR:
+                return True
+        return False
+
     # ── 大きい通り ──────────────────────────────────────────
 
     def nearest_major_street(
@@ -173,14 +252,17 @@ class LandmarkService:
         どこでも使え、ほぼ必ず何かは返る（docs/SPEC.md 2.4）。
         """
         for landmark in self.landmarks:
-            if landmark.kind == "point":
-                if not self.visible(landmark.id, ns_index, ew_index):
+            if landmark.kind in ("point", "peak"):
+                if landmark.kind == "peak":
+                    if not self.peak_visible(landmark, ns_index, ew_index):
+                        continue
+                elif not self.visible(landmark.id, ns_index, ew_index):
                     continue
                 bearing, distance = self.bearing_and_distance(landmark, ns_index, ew_index)
                 # 近すぎると見上げる形になり、水平方向が読みにくい
                 too_close = distance < landmark.min_distance
                 return {
-                    "kind": "point", "id": landmark.id, "name": landmark.name,
+                    "kind": landmark.kind, "id": landmark.id, "name": landmark.name,
                     "layer": landmark.layer,
                     "bearing": None if too_close else bearing,
                     "distance": round(distance),
