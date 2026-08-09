@@ -27,7 +27,7 @@ from preview_scene import (  # noqa: E402
     POLYGON, POSLIST, RADIUS, WIDTH, envelope,
 )
 
-OUT = OSM_DIR / "scenes"
+OUT = ROOT / "backend" / "app" / "data" / "scenes"
 BUCKET = 100.0          # 空間索引の升目(m)
 
 
@@ -145,10 +145,19 @@ def scene(lat, lon, ground, azimuth, profile, verts, offsets, table,
         shapes.append((float(depth.mean()),
                        " ".join(f"{x:.0f},{y:.0f}" for x, y in zip(xs, ys))))
 
+    # 線の太さごとに <g> でまとめる。1枚ずつ属性を書くと容量が倍近くなる
+    current = None
     for depth, points in sorted(shapes, key=lambda s: -s[0]):
-        width = 1.4 if depth < 60 else (1.0 if depth < 150 else 0.6)
-        parts.append(f'<polygon points="{points}" fill="#fff" stroke="#232a30" '
-                     f'stroke-width="{width}" stroke-linejoin="round"/>')
+        width = "1.4" if depth < 60 else ("1" if depth < 150 else ".6")
+        if width != current:
+            if current is not None:
+                parts.append("</g>")
+            parts.append(f'<g fill="#fff" stroke="#232a30" stroke-linejoin="round" '
+                         f'stroke-width="{width}">')
+            current = width
+        parts.append(f'<polygon points="{points}"/>')
+    if current is not None:
+        parts.append("</g>")
     parts.append("</svg>")
     return "".join(parts), len(shapes)
 

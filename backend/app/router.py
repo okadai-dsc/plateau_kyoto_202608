@@ -7,6 +7,7 @@ from .errors import IntersectionNotFound, RouteNotFound, SameLocation
 from .grid import Grid
 from .instruction import build_move_instruction, build_start_hint
 from .landmark import LandmarkService
+from .scene import SceneLibrary
 from .models import Axis, Direction, Intersection
 
 
@@ -25,9 +26,11 @@ class RouteService:
     ここが本企画の核であり、順番まで決めると普通のナビになる（docs/SPEC.md 3.5）。
     """
 
-    def __init__(self, grid: Grid, landmark: LandmarkService) -> None:
+    def __init__(self, grid: Grid, landmark: LandmarkService,
+                 scenes: "SceneLibrary | None" = None) -> None:
         self.grid = grid
         self.landmark = landmark
+        self.scenes = scenes
 
     def build_route_response(
         self,
@@ -56,6 +59,9 @@ class RouteService:
             "start": {
                 "landmark": None if cue.get("kind") == "none" else cue,
                 "hint": build_start_hint(cue),
+                # 目印が一点として定まる交差点にだけ線画がある（docs/SPEC.md 2.6）。
+                # 無い場合は hint の文章だけで歩いてもらう。
+                "scene": self.scenes.info(from_ns, from_ew) if self.scenes else None,
             },
             "moves": self._moves(from_ns, from_ew, to_ns, to_ew),
         }

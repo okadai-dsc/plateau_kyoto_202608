@@ -59,3 +59,47 @@ def test_resolve_destination_returns_nearest_intersection():
     data = response.json()
     assert data["destination"] == {"ns": "ns-12", "ew": "ew-12"}
     assert data["label"] == "烏丸通 × 四条通 付近"
+
+
+def test_scene_is_served_as_svg():
+    """線画は SVG として返る（docs/SPEC.md 2.6）。"""
+    client = TestClient(app)
+    grid = client.get("/api/grid").json()
+
+    # 線画がある交差点を1つ探す
+    from backend.app.scene import SceneLibrary
+    library = SceneLibrary()
+    assert library.count > 0, "線画が1件も無い。tools/gen_scenes.py を実行すること"
+
+    ns_index, ew_index = next(
+        (int(v) for v in key.split(","))
+        for key in [next(iter(library._index))]
+    ), None
+    key = next(iter(library._index))
+    ns_index, ew_index = (int(v) for v in key.split(","))
+
+    response = client.get(f"/api/scene/{ns_index}/{ew_index}")
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("image/svg+xml")
+    assert response.text.startswith("<svg")
+    assert len(grid["ns_streets"]) > ns_index
+
+
+def test_scene_is_absent_where_no_landmark_is_visible():
+    """稜線や大きい通りが手がかりの交差点には線画が無い。文章だけで歩く。"""
+    from backend.app.grid import Grid
+    from backend.app.scene import SceneLibrary
+    grid = Grid()
+    library = SceneLibrary()
+
+    missing = [
+        (ns, ew)
+        for ew in range(len(grid.ew_streets))
+        for ns in range(len(grid.ns_streets))
+        if grid.exists_indices(ns, ew) and library.info(ns, ew) is None
+    ]
+    assert missing, "全交差点に線画がある想定ではない"
+
+    client = TestClient(app)
+    ns_index, ew_index = missing[0]
+    assert client.get(f"/api/scene/{ns_index}/{ew_index}").status_code == 404

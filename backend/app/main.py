@@ -6,16 +6,17 @@ from typing import Any
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 
 from .destination import DestinationResolver
-from .errors import IntersectionNotFound, KyoterError
+from .errors import IntersectionNotFound, KyoterError, SceneNotAvailable
 from .grid import Grid
 from .instruction import build_start_hint
 from .landmark import LandmarkService
 from .models import ArrivalRequest, DestinationResolveRequest, RouteRequest
 from .router import RouteService
+from .scene import SceneLibrary
 
 app = FastAPI(title="Kyoter Backend")
 
@@ -39,8 +40,13 @@ def get_landmark() -> LandmarkService:
 
 
 @lru_cache
+def get_scenes() -> SceneLibrary:
+    return SceneLibrary()
+
+
+@lru_cache
 def get_route_service() -> RouteService:
-    return RouteService(get_grid(), get_landmark())
+    return RouteService(get_grid(), get_landmark(), get_scenes())
 
 
 @lru_cache
@@ -64,6 +70,17 @@ def grid() -> dict[str, Any]:
 @app.post("/api/route")
 def route(payload: RouteRequest) -> dict[str, Any]:
     return get_route_service().build_route_response(payload.from_, payload.to)
+
+
+@app.get("/api/scene/{ns_index}/{ew_index}")
+def scene(ns_index: int, ew_index: int) -> Response:
+    """交差点に立って目印の方を見た景色（線画）。"""
+    get_grid().validate_indices(ns_index, ew_index)
+    svg = get_scenes().svg(ns_index, ew_index)
+    if svg is None:
+        raise SceneNotAvailable()
+    return Response(content=svg, media_type="image/svg+xml",
+                    headers={"Cache-Control": "public, max-age=86400"})
 
 
 @app.post("/api/resolve-destination")
