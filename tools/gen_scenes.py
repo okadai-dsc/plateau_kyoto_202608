@@ -30,6 +30,28 @@ from preview_scene import (  # noqa: E402
 OUT = ROOT / "backend" / "app" / "data" / "scenes"
 BUCKET = 100.0          # 空間索引の升目(m)
 
+# 何がどれか分かるように、領域を塗り分ける
+SKY = (220, 233, 242)
+GROUND = (232, 228, 221)
+MOUNTAIN = (108, 132, 148)
+BUILDING = (168, 164, 156)
+# 面の向きで陰影を付ける。上・左手前から当たる光
+LIGHT = (-0.42, 0.25, 0.87)
+HAZE_FROM, HAZE_TO = 40.0, 900.0    # この距離で空の色に溶けきる
+
+
+def blend(colour, other, t):
+    return tuple(round(a + (b - a) * t) for a, b in zip(colour, other))
+
+
+def tone(colour, level):
+    return tuple(min(255, round(c * level)) for c in colour)
+
+
+def hazed(colour, distance):
+    t = min(max((distance - HAZE_FROM) / (HAZE_TO - HAZE_FROM), 0.0), 1.0)
+    return "#%02x%02x%02x" % blend(colour, SKY, t * 0.72)
+
 
 def load_rings(box):
     """建物の面を一度だけ読み、頂点をまとめた配列にする。"""
@@ -84,10 +106,13 @@ def scene(lat, lon, ground, azimuth, profile, verts, offsets, table,
     right = (math.cos(angle), -math.sin(angle))
     eye_z = ground + EYE
 
+    sky = "#%02x%02x%02x" % SKY
     parts = [f'<svg viewBox="0 0 {WIDTH} {HEIGHT}" xmlns="http://www.w3.org/2000/svg">',
-             f'<rect width="{WIDTH}" height="{HEIGHT}" fill="#fff"/>']
+             f'<rect width="{WIDTH}" height="{HEIGHT}" fill="{sky}"/>',
+             f'<rect y="{CY:.0f}" width="{WIDTH}" height="{HEIGHT}" '
+             f'fill="#%02x%02x%02x"/>' % GROUND]
 
-    # 山の稜線
+    # 山。稜線から下を塗る。手前の建物は後から重なるので自然に隠れる
     run = []
     for offset in list(range(-40, 41)) + [None]:
         if offset is not None and profile["kind"][(azimuth + offset) % 360] == 2:
@@ -96,9 +121,11 @@ def scene(lat, lon, ground, azimuth, profile, verts, offsets, table,
                         CY - math.tan(math.radians(profile["elevation"][a])) * FOCAL))
             continue
         if len(run) > 1:
-            d = " ".join(f"{x:.0f},{y:.0f}" for x, y in run)
-            parts.append(f'<polyline points="{d}" fill="none" stroke="#1c4a5a" '
-                         f'stroke-width="2.4"/>')
+            ridge = " ".join(f"{x:.0f},{y:.0f}" for x, y in run)
+            parts.append(f'<polygon points="{run[0][0]:.0f},{CY:.0f} {ridge} '
+                         f'{run[-1][0]:.0f},{CY:.0f}" fill="#%02x%02x%02x"/>' % MOUNTAIN)
+            parts.append(f'<polyline points="{ridge}" fill="none" stroke="#3d5a6b" '
+                         f'stroke-width="1.6"/>')
         run = []
 
     # 近くの面を索引から集める
@@ -128,8 +155,13 @@ def scene(lat, lon, ground, azimuth, profile, verts, offsets, table,
         rx, ry, rz = np.roll(ex, -1), np.roll(ny_, -1), np.roll(ez, -1)
         nx = np.sum((ny_ - ry) * (ez + rz))
         nyv = np.sum((ez - rz) * (ex + rx))
+        nz = np.sum((ex - rx) * (ny_ + ry))
         if ex.mean() * nx + ny_.mean() * nyv > 0:
             continue
+        # 面の向きで明るさを決める。屋根は明るく、光に背を向けた壁は暗く
+        length = math.sqrt(nx * nx + nyv * nyv + nz * nz) or 1.0
+        lambert = max(0.0, (nx * LIGHT[0] + nyv * LIGHT[1] + nz * LIGHT[2]) / length)
+        level = 0.62 + 0.44 * lambert
 
         depth = ex * forward[0] + ny_ * forward[1]
         if np.any(depth < 1.0):
@@ -142,19 +174,23 @@ def scene(lat, lon, ground, azimuth, profile, verts, offsets, table,
         area = abs(np.sum(xs * np.roll(ys, 1) - np.roll(xs, 1) * ys)) / 2
         if area < MIN_AREA:
             continue
-        shapes.append((float(depth.mean()),
+        shapes.append((float(depth.mean()), level,
                        " ".join(f"{x:.0f},{y:.0f}" for x, y in zip(xs, ys))))
 
-    # 線の太さごとに <g> でまとめる。1枚ずつ属性を書くと容量が倍近くなる
+    # 塗りと線の太さが同じものを <g> でまとめる。1枚ずつ属性を書くと容量が倍増する
     current = None
-    for depth, points in sorted(shapes, key=lambda s: -s[0]):
-        width = "1.4" if depth < 60 else ("1" if depth < 150 else ".6")
-        if width != current:
+    for depth, level, points in sorted(shapes, key=lambda s: -s[0]):
+        width = "1.2" if depth < 60 else ("0.8" if depth < 150 else "0.5")
+        # 明るさも距離も段階に丸める。連続値のままだと面ごとに色が変わり、
+        # <g> でまとめられなくなって容量が倍増する
+        band = round(depth / RADIUS * 8) / 8 * RADIUS
+        fill = hazed(tone(BUILDING, round(level * 10) / 10), band)
+        if (fill, width) != current:
             if current is not None:
                 parts.append("</g>")
-            parts.append(f'<g fill="#fff" stroke="#232a30" stroke-linejoin="round" '
+            parts.append(f'<g fill="{fill}" stroke="#4a5058" stroke-linejoin="round" '
                          f'stroke-width="{width}">')
-            current = width
+            current = (fill, width)
         parts.append(f'<polygon points="{points}"/>')
     if current is not None:
         parts.append("</g>")
