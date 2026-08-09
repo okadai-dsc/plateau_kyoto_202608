@@ -122,11 +122,14 @@ def draw(lat, lon, ground, azimuth, profile, label):
     heights = profile.get("ridge") or profile["elevation"]
     for offset in range(-40, 41):
         a = (azimuth + offset) % 360
-        if heights[a] <= RIDGE_MIN:
+        height = heights[a]
+        if profile["kind"][a] == 2:
+            height = max(height, profile["elevation"][a])
+        if height <= RIDGE_MIN:
             ridge.append(None)
             continue
         x = CX + math.tan(math.radians(offset)) * FOCAL
-        y = CY - math.tan(math.radians(heights[a])) * FOCAL
+        y = CY - math.tan(math.radians(height)) * FOCAL
         ridge.append((x, y))
     run = []
     for point in ridge + [None]:

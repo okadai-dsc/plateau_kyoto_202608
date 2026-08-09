@@ -119,7 +119,12 @@ def scene(lat, lon, ground, azimuth, profile, verts, offsets, table,
     heights = profile.get("ridge") or profile["elevation"]
     run = []
     for offset in list(range(-40, 41)) + [None]:
-        height = heights[(azimuth + offset) % 360] if offset is not None else 0.0
+        height = 0.0
+        if offset is not None:
+            a = (azimuth + offset) % 360
+            height = heights[a]
+            if profile["kind"][a] == 2:
+                height = max(height, profile["elevation"][a])
         if offset is not None and height > RIDGE_MIN:
             run.append((CX + math.tan(math.radians(offset)) * FOCAL,
                         CY - math.tan(math.radians(height)) * FOCAL))
