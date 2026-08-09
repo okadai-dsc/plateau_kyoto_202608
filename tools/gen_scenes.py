@@ -38,6 +38,7 @@ BUILDING = (168, 164, 156)
 # 面の向きで陰影を付ける。上・左手前から当たる光
 LIGHT = (-0.42, 0.25, 0.87)
 HAZE_FROM, HAZE_TO = 40.0, 900.0    # この距離で空の色に溶けきる
+RIDGE_MIN = 0.05       # ほぼ地平線上の微小な地形ノイズは山として塗らない
 
 
 def blend(colour, other, t):
@@ -112,13 +113,16 @@ def scene(lat, lon, ground, azimuth, profile, verts, offsets, table,
              f'<rect y="{CY:.0f}" width="{WIDTH}" height="{HEIGHT}" '
              f'fill="#%02x%02x%02x"/>' % GROUND]
 
-    # 山。稜線から下を塗る。手前の建物は後から重なるので自然に隠れる
+    # 山。**建物を無視した地形だけの稜線**を連続して描く。
+    # 尾根は建物の裏でも続いているので、断片で描くと山が切れて見える。
+    # 手前の建物は後から重ねるので、隠れるべき部分は自然に隠れる。
+    heights = profile.get("ridge") or profile["elevation"]
     run = []
     for offset in list(range(-40, 41)) + [None]:
-        if offset is not None and profile["kind"][(azimuth + offset) % 360] == 2:
-            a = (azimuth + offset) % 360
+        height = heights[(azimuth + offset) % 360] if offset is not None else 0.0
+        if offset is not None and height > RIDGE_MIN:
             run.append((CX + math.tan(math.radians(offset)) * FOCAL,
-                        CY - math.tan(math.radians(profile["elevation"][a])) * FOCAL))
+                        CY - math.tan(math.radians(height)) * FOCAL))
             continue
         if len(run) > 1:
             ridge = " ".join(f"{x:.0f},{y:.0f}" for x, y in run)

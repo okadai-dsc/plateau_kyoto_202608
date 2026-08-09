@@ -34,6 +34,7 @@ HFOV = 72.0            # 横の視野角（人の視野に近い）
 WIDTH, HEIGHT = 900, 480
 CX, CY = WIDTH / 2, HEIGHT * 0.62      # 消失点。少し下げると見上げる感じになる
 FOCAL = (WIDTH / 2) / math.tan(math.radians(HFOV / 2))
+RIDGE_MIN = 0.05
 
 POLYGON = re.compile(r"<gml:Polygon\b.*?</gml:Polygon>", re.S)
 POSLIST = re.compile(r"<gml:posList[^>]*>([^<]+)</gml:posList>")
@@ -116,15 +117,16 @@ def draw(lat, lon, ground, azimuth, profile, label):
     parts = [f'<svg viewBox="0 0 {WIDTH} {HEIGHT}" class="scene">',
              f'<rect width="{WIDTH}" height="{HEIGHT}" fill="#fff"/>']
 
-    # 山の稜線。地平線プロファイルの仰角をそのまま同じカメラに乗せる
+    # 山の稜線。建物を無視した地形だけの稜線を同じカメラに乗せる
     ridge = []
+    heights = profile.get("ridge") or profile["elevation"]
     for offset in range(-40, 41):
         a = (azimuth + offset) % 360
-        if profile["kind"][a] != 2:
+        if heights[a] <= RIDGE_MIN:
             ridge.append(None)
             continue
         x = CX + math.tan(math.radians(offset)) * FOCAL
-        y = CY - math.tan(math.radians(profile["elevation"][a])) * FOCAL
+        y = CY - math.tan(math.radians(heights[a])) * FOCAL
         ridge.append((x, y))
     run = []
     for point in ridge + [None]:
