@@ -244,6 +244,9 @@ const App = (() => {
     // 目印が1つも見えないときだけ警告色にする（見えているなら方角が分かる）
     hint.classList.toggle('is-invisible', !route.start?.landmark?.bearing);
 
+    // 方位帯。稜線や大きい通りは方位が度で出ないので、そのときは出ない
+    Skyline.render($('#skyline'), route.start?.landmark ?? null);
+
     const list = $('#route-moves');
     list.innerHTML = '';
     for (const move of route.moves) {
