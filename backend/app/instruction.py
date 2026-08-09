@@ -21,23 +21,13 @@ def build_start_hint(cue: dict | None) -> str:
     """出発地点での方角の手がかり。
 
     目印は経路を選ぶためではなく、**どちらが上ルかを知るため**にある。
-    精度が高い順に4層あり、最後の「街区の形」はどこでも使える（docs/SPEC.md 2.4）。
+    精度が高い順に4層あり、最後の「大きい通り」は
+    車がよく通っている方角で気づかせるのでどこでも使える（docs/SPEC.md 2.4）。
     """
-    if not cue:
+    if not cue or cue.get("kind") in (None, "none"):
         return "通り名の標識で方角を確かめてください。"
 
     kind = cue.get("kind")
-
-    if kind == "block":
-        # 方角そのものは分からないが、南北か東西かは街区の形で分かる。
-        # 京都の街区は東西に長いので、次の交差点までの距離が倍ちがう。
-        ns = cue.get("ns_spacing", 0)
-        ew = cue.get("ew_spacing", 0)
-        return (
-            f"目印は見えません。次の交差点まで"
-            f"およそ{ns}mなら東西、およそ{ew}mなら南北に歩いています。"
-            "通り名の標識で確かめてください。"
-        )
 
     # 稜線は「山の稜線」という名前をそのまま文に入れると硬いので短くする
     name = "山" if kind == "skyline" else (cue.get("name") or "目印")
@@ -54,6 +44,10 @@ def build_start_hint(cue: dict | None) -> str:
         if walk > 0:
             return f"{bearing}へ{walk}mほど歩くと山が見えます。{facing}"
         return f"{bearing}に山が見えます。{facing}"
+
+    if kind == "street":
+        # そこまで歩かせない。立った場所から「あっちは車がよく通ってるな」で気づかせる
+        return f"{bearing}の方を車がよく通っています。あちらが{name}です。{facing}"
 
     return f"{name}が{bearing}に見えます。{facing}"
 

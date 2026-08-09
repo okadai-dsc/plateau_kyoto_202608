@@ -9,18 +9,17 @@
   },
   "start": {
     "landmark": {
-      "kind": "skyline",
-      "id": "skyline",
-      "name": "山の稜線",
-      "layer": 3,
-      "bearing": "北東",
-      "walk": 0,
-      "directions": {
-        "北東": 0,
-        "東": 0
-      }
+      "kind": "peak",
+      "id": "atago",
+      "name": "愛宕山",
+      "layer": 2,
+      "bearing": "北西",
+      "distance": 14114,
+      "azimuth": 297.4,
+      "elevation": 3.5,
+      "height": 924.0
     },
-    "hint": "北東に山が見えます。山を正面に見て、左前が上ルです。"
+    "hint": "愛宕山が北西に見えます。愛宕山を正面に見て、右前が上ルです。"
   },
   "moves": [
     {

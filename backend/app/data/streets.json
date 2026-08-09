@@ -421,28 +421,62 @@
       "kind": "point",
       "x": 1137,
       "y": 4724,
-      "min_distance": 200
+      "min_distance": 200,
+      "height": 131
+    },
+    {
+      "id": "atago",
+      "name": "愛宕山",
+      "layer": 2,
+      "kind": "peak",
+      "x": 12830,
+      "y": -3610,
+      "min_distance": 0,
+      "height": 924
     },
     {
       "id": "daimonji",
       "name": "大文字",
-      "layer": 2,
-      "kind": "point",
+      "layer": 3,
+      "kind": "peak",
       "x": -2721,
       "y": 300,
-      "min_distance": 0
+      "min_distance": 0,
+      "height": 465
+    },
+    {
+      "id": "kitayama",
+      "name": "北山（天ヶ岳）",
+      "layer": 4,
+      "kind": "peak",
+      "x": 1230,
+      "y": -13340,
+      "min_distance": 0,
+      "height": 788
+    },
+    {
+      "id": "hiei",
+      "name": "比叡山",
+      "layer": 5,
+      "kind": "peak",
+      "x": -5510,
+      "y": -4740,
+      "min_distance": 0,
+      "height": 848
     },
     {
       "id": "skyline",
       "name": "山の稜線",
-      "layer": 3,
+      "layer": 6,
       "kind": "skyline"
     },
     {
-      "id": "block",
-      "name": "街区の形",
-      "layer": 4,
-      "kind": "block"
+      "id": "major_street",
+      "name": "大きい通り",
+      "layer": 7,
+      "kind": "street",
+      "max_distance": 600,
+      "min_width": 15
     }
   ],
   "geo": {
@@ -452,10 +486,6 @@
       "lat": 35.0296957,
       "lng": 135.7721695
     }
-  },
-  "block": {
-    "ns_spacing": 72,
-    "ew_spacing": 136
   },
   "spots": [
     {
@@ -568,5 +598,6 @@
         ]
       }
     }
-  ]
+  ],
+  "ground_height": 50
 }

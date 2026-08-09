@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from backend.app.grid import Grid
-from backend.app.landmark import LandmarkService
+from backend.app.landmark import Landmark, LandmarkService
 from .conftest import write_grid_data
 
 
@@ -87,3 +87,115 @@ def test_best_withholds_the_bearing_when_the_landmark_is_too_close(tmp_path):
     assert cue["kind"] == "point"
     assert cue["bearing"] is None          # 見えてはいるが方位には使わせない
     assert cue["distance"] == 120
+
+
+MAJOR_STREET_LANDMARK = [
+    {"id": "major_street", "name": "大きい通り", "layer": 4,
+     "kind": "street", "max_distance": 600, "min_width": 15}
+]
+
+
+def test_nearest_major_street_gives_a_real_bearing(tmp_path):
+    """「大きい通り」は、置き換え前の「街区の形」と違って実際の方角を返す。"""
+    service = make(tmp_path, ns_count=5, ew_count=5, tower=(0, 0),
+                   major_ns=[4], major_ew=[0], landmarks=MAJOR_STREET_LANDMARK)
+    # (2,2) から見て N4通 は西に240m、E0通 は北に240m。同距離なら先に見た方
+    found = service.nearest_major_street(2, 2)
+    assert found["bearing"] in ("北", "西")
+    assert found["distance"] == 240
+
+
+def test_nearest_major_street_picks_the_closest(tmp_path):
+    service = make(tmp_path, ns_count=5, ew_count=5, tower=(0, 0),
+                   major_ns=[0], major_ew=[3], landmarks=MAJOR_STREET_LANDMARK)
+    # (2,2) から N0通 は東に240m、E3通 は南に120m → 近い南を選ぶ
+    found = service.nearest_major_street(2, 2)
+    assert found == {"name": "E3通", "bearing": "南", "distance": 120}
+
+
+def test_narrow_street_is_not_a_traffic_cue(tmp_path):
+    """幅で選ぶ。寺町通(8m)や三条通(8m)のように major でも車が通らない通りは使わない。"""
+    service = make(tmp_path, ns_count=5, ew_count=5, tower=(0, 0),
+                   major_ns=[], major_ew=[], landmarks=MAJOR_STREET_LANDMARK)
+    # major がひとつも無い = すべて 8m = 車の流れを感じ取れる通りが無い
+    assert service.nearest_major_street(2, 2) is None
+
+
+def test_traffic_cue_is_dropped_when_too_far_to_notice(tmp_path):
+    """遠すぎる大通りは、立った場所から気づけないので使わない。"""
+    service = make(tmp_path, ns_count=12, ew_count=12, tower=(0, 0),
+                   major_ns=[11], major_ew=[11], landmarks=MAJOR_STREET_LANDMARK)
+    # (0,0) から N11通 / E11通 までは 1320m。既定の 600m を超える
+    assert service.nearest_major_street(0, 0) is None
+    # 600m 以内まで寄れば気づける
+    assert service.nearest_major_street(7, 7)["distance"] == 480
+
+
+def test_severed_street_is_not_visible_through(tmp_path):
+    """大通りとの交点が欠けている＝そこで通りが切れている（御所・二条城など）。"""
+    exists = [[True] * 5 for _ in range(5)]
+    exists[3][2] = False          # E3通 × N2通 が無い = N2通 は E3通 に届かない
+    service = make(tmp_path, ns_count=5, ew_count=5, tower=(0, 0), exists=exists,
+                   major_ns=[], major_ew=[3], landmarks=MAJOR_STREET_LANDMARK)
+    assert service.nearest_major_street(2, 2) is None
+    # 隣の通りからは見通せる
+    assert service.nearest_major_street(1, 2)["name"] == "E3通"
+
+
+def test_major_street_covers_almost_every_real_intersection():
+    """実データで、ほぼ全ての交差点から方角が出ることを確かめる。
+
+    置き換え前の「街区の形」は bearing を返さず、実在交差点の 47% が
+    方角なしだった（docs/SPEC.md 2.4）。
+    """
+    grid = Grid()
+    service = LandmarkService(grid)
+    total = 0
+    without_bearing = 0
+    for ew in range(len(grid.ew_streets)):
+        for ns in range(len(grid.ns_streets)):
+            if not grid.exists_indices(ns, ew):
+                continue
+            total += 1
+            if service.best(ns, ew).get("bearing") is None:
+                without_bearing += 1
+    assert total > 0
+    assert without_bearing / total < 0.05
+
+
+def test_azimuth_is_finer_than_the_eight_directions():
+    """図に置くための正確な方位(度)が、8方位に丸める前の値として返る。"""
+    grid = Grid()
+    service = LandmarkService(grid)
+    ns = [s["name"] for s in grid.ns_streets]
+    ew = [s["name"] for s in grid.ew_streets]
+    cue = service.best(ns.index("川端通"), ew.index("丸太町通"))
+
+    assert cue["name"] == "愛宕山"
+    assert cue["bearing"] == "西"           # 8方位に丸めると西
+    assert 270 < cue["azimuth"] < 315       # 実際は西より北寄り
+    # 丸めた方位と食い違わないこと
+    assert abs(((cue["azimuth"] - 270) + 180) % 360 - 180) <= 22.5
+
+
+def test_mountains_are_low_and_wide():
+    """山の仰角は数度しかない。描画で縦を誇張する必要がある根拠（SPEC 2.6）。"""
+    grid = Grid()
+    service = LandmarkService(grid)
+    ns = [s["name"] for s in grid.ns_streets]
+    ew = [s["name"] for s in grid.ew_streets]
+    cue = service.best(ns.index("烏丸通"), ew.index("四条通"))
+    assert cue["elevation"] is not None
+    assert 0 < cue["elevation"] < 10
+
+
+def test_peak_elevation_subtracts_ground_but_structure_does_not(tmp_path):
+    """山は標高なので地盤高を引く。京都タワーは構造物の高さなので引かない。"""
+    service = make(tmp_path, ns_count=3, ew_count=3, tower=(0, 0))
+    tower = service.landmarks[0]
+    tower.height = 131
+    tower.kind = "point"
+    peak = Landmark({"id": "p", "name": "山", "layer": 2, "kind": "peak", "height": 131})
+
+    # 同じ高さ・同じ距離でも、山は地盤高(50m)ぶん低く見える
+    assert service.elevation_angle(tower, 1000) > service.elevation_angle(peak, 1000)
