@@ -27,7 +27,8 @@ OSM = ROOT / "data" / "osm"
 M_PER_LAT = 111_132.0
 M_PER_LON = 91_200.0
 
-RADIUS = 320.0         # 描く範囲(m)。これ以上遠い建物は線が潰れる
+RADIUS = 180.0         # 描く範囲(m)。これ以上遠い建物は線が潰れる
+MIN_AREA = 30.0        # 画面上でこれ以下(px^2)の面は捨てる
 EYE = 1.5
 HFOV = 72.0            # 横の視野角（人の視野に近い）
 WIDTH, HEIGHT = 900, 480
@@ -77,6 +78,24 @@ def faces_near(lat, lon):
     return out
 
 
+def facing_away(ring, lat, lon):
+    """視点に背を向けている面か。CityGML の外周は外から見て反時計回り。
+
+    奥の壁は必ず手前の壁に隠れるので、描かなくても絵は変わらない。
+    """
+    nx = ny = nz = 0.0
+    for a, b in zip(ring, ring[1:] + ring[:1]):
+        ax, ay, az = (a[1] - lon) * M_PER_LON, (a[0] - lat) * M_PER_LAT, a[2]
+        bx, by, bz = (b[1] - lon) * M_PER_LON, (b[0] - lat) * M_PER_LAT, b[2]
+        nx += (ay - by) * (az + bz)
+        ny += (az - bz) * (ax + bx)
+        nz += (ax - bx) * (ay + by)
+    # 面の中心へのベクトルと法線が同じ向き＝裏
+    cx = sum((p[1] - lon) * M_PER_LON for p in ring) / len(ring)
+    cy = sum((p[0] - lat) * M_PER_LAT for p in ring) / len(ring)
+    return cx * nx + cy * ny > 0
+
+
 def project(point, origin, ground, forward, right):
     """緯度経度標高 → 画面座標。カメラの後ろなら None。"""
     north = (point[0] - origin[0]) * M_PER_LAT
@@ -118,8 +137,14 @@ def draw(lat, lon, ground, azimuth, profile, label):
             run.append(point)
 
     # 建物。遠い面から白く塗って線を描くと、手前が奥を隠す
+    eye_z = ground + EYE
     shapes = []
     for ring in faces_near(lat, lon):
+        # 足元の面（地面と接する多角形）は必ず隠れるので描かない
+        if max(p[2] for p in ring) <= eye_z:
+            continue
+        if facing_away(ring, lat, lon):
+            continue
         pts = [project(p, (lat, lon), ground, forward, right) for p in ring]
         if any(p is None for p in pts) or len(pts) < 3:
             continue
@@ -128,9 +153,14 @@ def draw(lat, lon, ground, azimuth, profile, label):
             continue
         xs = [p[0] for p in pts]
         ys = [p[1] for p in pts]
-        if max(xs) < -50 or min(xs) > WIDTH + 50 or min(ys) > HEIGHT + 200:
+        if max(xs) < 0 or min(xs) > WIDTH or min(ys) > HEIGHT:
             continue
-        shapes.append((depth, " ".join(f"{x:.1f},{y:.1f}" for x, y in zip(xs, ys))))
+        # 画面上で小さすぎる面は線が潰れるだけなので捨てる
+        area = abs(sum(xs[i] * ys[i - 1] - xs[i - 1] * ys[i]
+                       for i in range(len(xs)))) / 2
+        if area < MIN_AREA:
+            continue
+        shapes.append((depth, " ".join(f"{x:.0f},{y:.0f}" for x, y in zip(xs, ys))))
     for depth, points in sorted(shapes, key=lambda s: -s[0]):
         width = 1.4 if depth < 60 else (1.0 if depth < 150 else 0.6)
         parts.append(f'<polygon points="{points}" fill="#fff" stroke="#232a30" '
