@@ -419,20 +419,20 @@
       "name": "京都タワー",
       "layer": 1,
       "kind": "point",
-      "x": 1137,
-      "y": 4724,
+      "height": 131.0,
       "min_distance": 200,
-      "height": 131
+      "x": 1155,
+      "y": 4689
     },
     {
       "id": "atago",
       "name": "愛宕山",
       "layer": 2,
       "kind": "peak",
-      "height": 924,
+      "height": 924.0,
       "min_distance": 0,
-      "x": 12830,
-      "y": -3610,
+      "x": 12783,
+      "y": -3590,
       "width_km": 4
     },
     {
@@ -440,7 +440,7 @@
       "name": "大文字",
       "layer": 3,
       "kind": "peak",
-      "height": 465,
+      "height": 330.0,
       "min_distance": 0,
       "x": -2721,
       "y": 300,
@@ -451,50 +451,52 @@
       "name": "東山",
       "layer": 4,
       "kind": "range",
-      "height": 250,
+      "height": 250.0,
       "min_distance": 0,
       "ends": {
         "from": {
-          "x": -5510,
-          "y": -4740
+          "x": -5557,
+          "y": -4724
         },
         "to": {
-          "x": -480,
-          "y": 6930
+          "x": -532,
+          "y": 6967
         }
       },
-      "x": -2995.0,
-      "y": 1095.0
+      "x": -3045,
+      "y": 1121,
+      "samples": 21
     },
     {
       "id": "kitayama",
       "name": "北山",
       "layer": 5,
       "kind": "range",
-      "height": 700,
+      "height": 700.0,
       "min_distance": 0,
       "ends": {
         "from": {
-          "x": 9730,
-          "y": -16090
+          "x": 9683,
+          "y": -16092
         },
         "to": {
-          "x": -5134,
-          "y": -7878
+          "x": -5183,
+          "y": -7869
         }
       },
-      "x": 2298.0,
-      "y": -11984.0
+      "x": 2250,
+      "y": -11981,
+      "samples": 21
     },
     {
       "id": "hiei",
       "name": "比叡山",
       "layer": 6,
       "kind": "peak",
-      "height": 848,
+      "height": 848.0,
       "min_distance": 0,
-      "x": -5510,
-      "y": -4740,
+      "x": -5557,
+      "y": -4724,
       "width_km": 4
     },
     {
@@ -519,6 +521,10 @@
       "lat": 35.0296957,
       "lng": 135.7721695
     }
+  },
+  "block": {
+    "ns_spacing": 72,
+    "ew_spacing": 136
   },
   "spots": [
     {
@@ -631,6 +637,5 @@
         ]
       }
     }
-  ],
-  "ground_height": 50
+  ]
 }

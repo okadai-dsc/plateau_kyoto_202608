@@ -88,3 +88,11 @@ def test_a_range_straight_ahead_needs_no_rotation():
     hint = build_start_hint({"kind": "range", "name": "北山", "layer": 5,
                              "bearing": "北", "angular_width": 40})
     assert "そちらが上ルです" in hint
+
+
+def test_a_narrow_range_is_not_called_a_wide_skyline():
+    """建物の切れ目から少し覗いているだけのときに「広がっています」とは言わない。"""
+    hint = build_start_hint({"kind": "range", "name": "東山", "layer": 4,
+                             "bearing": "東", "angular_width": 6.9})
+    assert "東に東山が見えています" in hint
+    assert "広がっています" not in hint

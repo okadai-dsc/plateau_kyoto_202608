@@ -9,19 +9,19 @@
   },
   "start": {
     "landmark": {
-      "kind": "peak",
-      "id": "atago",
-      "name": "愛宕山",
-      "layer": 2,
-      "bearing": "北西",
-      "distance": 14114,
-      "azimuth": 297.4,
-      "azimuth_from": 289.4,
-      "angular_width": 16.1,
-      "elevation": 3.5,
-      "height": 924.0
+      "kind": "range",
+      "id": "kitayama",
+      "name": "北山",
+      "layer": 5,
+      "bearing": "北",
+      "distance": 12077,
+      "azimuth": 358.1,
+      "azimuth_from": 356.7,
+      "angular_width": 3.0,
+      "elevation": 3.3,
+      "height": 700.0
     },
-    "hint": "愛宕山が北西に見えます。愛宕山を正面に見て、右前が上ルです。"
+    "hint": "北に北山が見えています。そちらが上ルです。"
   },
   "moves": [
     {

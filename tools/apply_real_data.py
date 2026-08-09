@@ -21,7 +21,11 @@
 
 import json
 import statistics
+import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from calc_viewshed import RANGE_SAMPLES  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 OSM = ROOT / "data" / "osm"
@@ -83,16 +87,22 @@ def main() -> None:
 
     # ── 実在マスクと可視マスク ──────────────────────────────
     exists = [[False] * n_ns for _ in range(n_ew)]
-    tower = [[False] * n_ns for _ in range(n_ew)]
-    daimonji = [[False] * n_ns for _ in range(n_ew)]
     sky = {}
+    # 単独峰・人工物は真偽の行列。連なりは「尾根のどの点が見えたか」の辞書
+    masks = {lm["id"]: [[False] * n_ns for _ in range(n_ew)]
+             for lm in source["landmarks"] if lm["kind"] != "range"}
+    ranges = {lm["id"]: {} for lm in source["landmarks"] if lm["kind"] == "range"}
 
     for (i, j), _ in points.items():
         ni, nj = ns_map[i], ew_map[j]
         exists[nj][ni] = True
         key = f"{i},{j}"
-        tower[nj][ni] = bool(viewshed["tower"].get(key))
-        daimonji[nj][ni] = bool(viewshed["daimonji"].get(key))
+        for landmark_id, mask in masks.items():
+            mask[nj][ni] = bool(viewshed.get(landmark_id, {}).get(key))
+        for landmark_id, seen in ranges.items():
+            hits = viewshed.get(landmark_id, {}).get(key) or []
+            if hits:
+                seen[f"{ni},{nj}"] = hits
         if key in skyline:
             sky[f"{ni},{nj}"] = skyline[key]
 
@@ -111,18 +121,38 @@ def main() -> None:
         j = next(s for s in ew_streets if s["name"] == name_ew)
         return float(i["pos"]), float(j["pos"])
 
-    tower_xy = position("烏丸通", "塩小路通")
-    # 大文字は洛中の外。実座標から同じ基準で換算する
-    daimonji_xy = ((lon_ref - 135.8020) * M_PER_LON, (lat_ref - 35.0270) * M_PER_LAT)
+    def to_xy(lat, lon):
+        """緯度経度を内部のメートル座標へ。x = 最も東の通りから西へ、y = 最も北から南へ。"""
+        return round((lon_ref - lon) * M_PER_LON), round((lat_ref - lat) * M_PER_LAT)
 
-    landmarks = [
-        {"id": "tower", "name": "京都タワー", "layer": 1, "kind": "point",
-         "x": round(tower_xy[0]), "y": round(tower_xy[1]), "min_distance": 200},
-        {"id": "daimonji", "name": "大文字", "layer": 2, "kind": "point",
-         "x": round(daimonji_xy[0]), "y": round(daimonji_xy[1]), "min_distance": 0},
-        {"id": "skyline", "name": "山の稜線", "layer": 3, "kind": "skyline"},
-        {"id": "block", "name": "街区の形", "layer": 4, "kind": "block"},
-    ]
+    landmarks = []
+    for lm in source["landmarks"]:
+        entry = {"id": lm["id"], "name": lm["name"], "layer": lm["layer"],
+                 "kind": lm["kind"], "height": lm["height"],
+                 "min_distance": lm.get("min_distance", 0)}
+        if lm["kind"] == "range":
+            ends = {side: dict(zip(("x", "y"), to_xy(p["lat"], p["lon"])))
+                    for side, p in lm["ends"].items()}
+            entry["ends"] = ends
+            entry["x"] = (ends["from"]["x"] + ends["to"]["x"]) // 2
+            entry["y"] = (ends["from"]["y"] + ends["to"]["y"]) // 2
+            # 可視データは「尾根上の何番目の点が見えたか」なので、
+            # バックエンドが位置に戻せるよう分割数を持たせる
+            entry["samples"] = RANGE_SAMPLES
+        else:
+            entry["x"], entry["y"] = to_xy(lm["lat"], lm["lon"])
+            if lm.get("width_km"):
+                entry["width_km"] = lm["width_km"]
+        landmarks.append(entry)
+
+    # 目印が何も見えないときの最後の手がかり。PLATEAU を使わず、
+    # 通りの幅と実在マスクだけで決まる（docs/SPEC.md 2.4）
+    last = max(lm["layer"] for lm in landmarks)
+    landmarks.append({"id": "skyline", "name": "山の稜線",
+                      "layer": last + 1, "kind": "skyline"})
+    landmarks.append({"id": "major_street", "name": "大きい通り",
+                      "layer": last + 2, "kind": "street",
+                      "max_distance": 600, "min_width": 15})
 
     # ── 観光地（実在する交差点だけ残す） ────────────────────
     spots = []
@@ -164,20 +194,33 @@ def main() -> None:
     })
     write(data_dir / "exists.json", {"exists": exists})
     write(data_dir / "visible.json",
-          {"visible": {"tower": tower, "daimonji": daimonji, "skyline": sky}})
+          {"visible": {**masks, **ranges, "skyline": sky}})
 
     total = n_ns * n_ew
     n_exists = sum(sum(r) for r in exists)
-    n_tower = sum(sum(r) for r in tower)
-    n_dai = sum(sum(r) for r in daimonji)
-    covered = sum(1 for j in range(n_ew) for i in range(n_ns)
-                  if exists[j][i] and (tower[j][i] or daimonji[j][i] or f"{i},{j}" in sky))
     print(f"\n交差点 {n_exists}/{total}")
-    print(f"  L1 京都タワー {n_tower:>4}（{n_tower / n_exists:.0%}）")
-    print(f"  L2 大文字     {n_dai:>4}（{n_dai / n_exists:.0%}）")
-    print(f"  L3 山の稜線   {len(sky):>4}（{len(sky) / n_exists:.0%}）")
-    print(f"  L1〜L3 合計   {covered:>4}（{covered / n_exists:.0%}）")
-    print(f"  L4 街区       {n_exists:>4}（100%・どこでも使える）")
+
+    # レイヤ順に、そこまでで初めて手がかりが得られる交差点を数える
+    remaining = {(i, j) for j in range(n_ew) for i in range(n_ns) if exists[j][i]}
+    for lm in sorted(landmarks, key=lambda x: x["layer"]):
+        if lm["kind"] == "street":
+            print(f"  L{lm['layer']} {lm['name']:<12}"
+                  f"{len(remaining):>4}（残り全部・PLATEAU 不要）")
+            remaining = set()
+            continue
+        if lm["kind"] == "range":
+            hit = {tuple(int(v) for v in k.split(",")) for k in ranges[lm["id"]]}
+        elif lm["kind"] == "skyline":
+            hit = {tuple(int(v) for v in k.split(",")) for k in sky}
+        else:
+            mask = masks[lm["id"]]
+            hit = {(i, j) for (i, j) in remaining if mask[j][i]}
+        new = remaining & hit
+        remaining -= new
+        print(f"  L{lm['layer']} {lm['name']:<12}{len(new):>4}"
+              f"（{len(new) / n_exists:.0%}）")
+    if remaining:
+        print(f"  手がかり無し  {len(remaining):>4}")
 
     write_mocks()
 

@@ -46,10 +46,14 @@ def build_start_hint(cue: dict | None) -> str:
         return f"{bearing}に山が見えます。{facing}"
 
     if kind == "range":
-        # 連なりは「正面に見て」が成り立たない。個別の山も名指ししない
+        # 連なりは「正面に見て」が成り立たない。個別の山も名指ししない。
+        # 見えているのは尾根全体ではなく建物の切れ目から覗いた部分なので、
+        # その角幅で言い方を変える（docs/SPEC.md 2.4）
+        wide = float(cue.get("angular_width") or 0) >= 20
+        seen = "の山並みが広がっています" if wide else "が見えています"
         if relative == "正面":
-            return f"{bearing}に{name}の山並みが広がっています。そちらが上ルです。"
-        return f"{bearing}に{name}の山並みが広がっています。そちらを向くと、{relative}が上ルです。"
+            return f"{bearing}に{name}{seen}。そちらが上ルです。"
+        return f"{bearing}に{name}{seen}。そちらを向くと、{relative}が上ルです。"
 
     if kind == "street":
         # そこまで歩かせない。立った場所から「あっちは車がよく通ってるな」で気づかせる

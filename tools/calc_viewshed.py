@@ -26,31 +26,35 @@ ROOT = Path(__file__).resolve().parent.parent
 PLATEAU = ROOT / "data" / "plateau" / "udx"
 OSM_DIR = ROOT / "data" / "osm"
 
-# 計算範囲。北の比叡山・北山、西の愛宕山まで入れる。
+# 計算範囲。北の北山(天ヶ岳 35.150)、西の愛宕山(135.632)まで入れる。
 # ここが狭いと「山が無い」のか「範囲外」なのか区別できない。
-LAT0, LAT1 = 34.965, 35.105
-LON0, LON1 = 135.620, 135.840
+LAT0, LAT1 = 34.940, 35.200
+LON0, LON1 = 135.590, 135.860
+
+# 建物を焼く範囲。建物が視線を遮るのは近傍だけなので、全域では読まない。
+# 高さ31mのビルは 3km 先で仰角0.6度。山は3〜5度あるので影響しない。
+BLDG_LAT0, BLDG_LAT1 = 34.955, 35.090
+BLDG_LON0, BLDG_LON1 = 135.660, 135.850
+
 CELL = 5.0                      # グリッドの一辺(m)
 EYE = 1.5                       # 歩行者の目線(m)
+GSI_DEM = ROOT / "data" / "gsi" / "dem"
+GSI_ZOOM = 14
 
 # 緯度経度→メートルの換算（この緯度での近似）
 M_PER_LAT = 111_132.0
 M_PER_LON = 91_200.0
 
+# 目印の定義は tools/kyoto_streets.json が唯一のソース（apply_real_data.py も同じものを読む）
+SOURCE = ROOT / "tools" / "kyoto_streets.json"
 LANDMARKS = {
-    "tower": {
-        "name": "京都タワー",
-        "lat": 34.9875, "lon": 135.7595,
-        "height": 131.0,            # 塔頂。地面からの高さ
-        "on_ground": True,          # 地形の標高に足す
-    },
-    "daimonji": {
-        "name": "大文字",
-        "lat": 35.0270, "lon": 135.8020,
-        "height": 330.0,            # 火床の標高（絶対）
-        "on_ground": False,
-    },
+    lm["id"]: lm
+    for lm in json.loads(SOURCE.read_text(encoding="utf-8"))["landmarks"]
 }
+
+# 連なりは尾根に沿って何点か置き、どれか見えれば「見える」とする。
+# 見えた点の方位から、実際に見えている範囲（角幅）も出せる。
+RANGE_SAMPLES = 21
 
 NX = int((LON1 - LON0) * M_PER_LON / CELL)
 NY = int((LAT1 - LAT0) * M_PER_LAT / CELL)
@@ -81,13 +85,14 @@ def envelope(path):
     return a[0], b[0], a[1], b[1]
 
 
-def relevant(kind):
+def relevant(kind, bounds=None):
+    lat0, lat1, lon0, lon1 = bounds or (LAT0, LAT1, LON0, LON1)
     files = []
     for path in sorted((PLATEAU / kind).glob("*.gml")):
         box = envelope(path)
         if not box:
             continue
-        if box[1] < LAT0 or box[0] > LAT1 or box[3] < LON0 or box[2] > LON1:
+        if box[1] < lat0 or box[0] > lat1 or box[3] < lon0 or box[2] > lon1:
             continue
         files.append(path)
     return files
@@ -100,6 +105,45 @@ def scatter_max(grid, xs, ys, zs):
         return
     flat = ys[ok] * NX + xs[ok]
     np.maximum.at(grid.reshape(-1), flat, zs[ok])
+
+
+def burn_gsi(grid):
+    """国土地理院の標高タイルを撒く。PLATEAU の地形が届かない遠方を埋める。
+
+    PLATEAU の dem は市域を切ったもので、愛宕山も比叡山も入っていない
+    （docs/SPEC.md 2.5）。建物は PLATEAU にしか無いので主役は変わらない。
+    """
+    files = sorted(GSI_DEM.glob(f"{GSI_ZOOM}/*/*.txt"))
+    print(f"地形(国土地理院): {len(files)}タイル")
+    n = 2 ** GSI_ZOOM
+    for index, path in enumerate(files, start=1):
+        text = path.read_text()
+        if not text.strip():
+            continue
+        x = int(path.parent.name)
+        y = int(path.stem)
+        # タイルの緯度経度の範囲（Webメルカトル）
+        top = math.degrees(math.atan(math.sinh(math.pi * (1 - 2 * y / n))))
+        bottom = math.degrees(math.atan(math.sinh(math.pi * (1 - 2 * (y + 1) / n))))
+        left = x / n * 360.0 - 180.0
+        right = (x + 1) / n * 360.0 - 180.0
+
+        rows = text.strip().split("\n")
+        values = np.array([[float("nan") if v == "e" else float(v)
+                            for v in row.split(",")] for row in rows], dtype=np.float32)
+        size = values.shape[0]
+        # セル中心の緯度経度。メルカトルの歪みはこの範囲では無視できる
+        lats = top + (bottom - top) * (np.arange(size) + 0.5) / size
+        lons = left + (right - left) * (np.arange(size) + 0.5) / size
+        lon_mesh, lat_mesh = np.meshgrid(lons, lats)
+        ok = ~np.isnan(values)
+        if not ok.any():
+            continue
+        xs = ((lon_mesh[ok] - LON0) * M_PER_LON / CELL).astype(np.int32)
+        ys = ((lat_mesh[ok] - LAT0) * M_PER_LAT / CELL).astype(np.int32)
+        scatter_max(grid, xs, ys, values[ok])
+        if index % 50 == 0 or index == len(files):
+            print(f"  [{index}/{len(files)}]", flush=True)
 
 
 def burn_terrain(grid):
@@ -126,7 +170,7 @@ def burn_terrain(grid):
 
 def burn_buildings(grid):
     """建物の頂点を撒く。LOD1 なので屋根の高さがそのまま絶対標高で入っている。"""
-    files = relevant("bldg")
+    files = relevant("bldg", (BLDG_LAT0, BLDG_LAT1, BLDG_LON0, BLDG_LON1))
     print(f"建物: {len(files)}ファイル")
     for index, path in enumerate(files, start=1):
         text = path.open(encoding="utf-8", errors="replace").read()
@@ -176,27 +220,65 @@ def visible(grid, observer, target, step=CELL):
 
 def main() -> None:
     print(f"グリッド {NX} x {NY}（{CELL}m 四方、{NX * NY / 1e6:.1f}M セル）\n")
-    grid = np.full((NY, NX), -9999.0, dtype=np.float32)
+    terrain_path = OSM_DIR / "grid_terrain.npy"
+    surface_path = OSM_DIR / "grid_surface.npy"
+    cached = (terrain_path.exists() and surface_path.exists()
+              and np.load(terrain_path, mmap_mode="r").shape == (NY, NX))
 
-    burn_terrain(grid)
-    terrain = grid.copy()
-    burn_buildings(grid)
+    if cached and "--rebuild" not in sys.argv:
+        print("グリッドはキャッシュを使います（作り直すには --rebuild）\n")
+        terrain = np.load(terrain_path)
+        grid = np.load(surface_path)
+    else:
+        grid = np.full((NY, NX), -9999.0, dtype=np.float32)
+        # 国土地理院で全域を埋めてから、PLATEAU の地形を重ねる（高い方を採る）。
+        # PLATEAU は市域しか無いので、遠方の山は国土地理院の値がそのまま残る。
+        burn_gsi(grid)
+        burn_terrain(grid)
+        terrain = grid.copy()
+        burn_buildings(grid)
+        np.save(terrain_path, terrain)
+        np.save(surface_path, grid)
 
     filled = (grid > -9000).sum()
-    print(f"\n高さが入ったセル: {filled:,} / {NX * NY:,}（{filled / (NX * NY):.0%}）")
+    print(f"\n高さが入ったセル: {filled:,} / {NX * NY:,}（{filled / (NX * NY):.0%}）"
+          f"  最高 {grid.max():.0f}m")
 
     data = json.loads((OSM_DIR / "intersections.json").read_text(encoding="utf-8"))
     ns_names, ew_names = data["ns"], data["ew"]
     points = data["intersections"]
 
-    result = {}
-    for key, landmark in LANDMARKS.items():
+    def targets_of(landmark):
+        """目印の「狙う点」。単独峰は1点、連なりは尾根に沿って複数点。"""
+        if landmark["kind"] == "range":
+            a, b = landmark["ends"]["from"], landmark["ends"]["to"]
+            out = []
+            for i in range(RANGE_SAMPLES):
+                t = i / (RANGE_SAMPLES - 1)
+                lat = a["lat"] + (b["lat"] - a["lat"]) * t
+                lon = a["lon"] + (b["lon"] - a["lon"]) * t
+                # 尾根の高さは実際の地形から採る。両端を結ぶ直線は谷を横切ることも
+                # あるので、近傍の最高点を尾根の高さとみなす
+                cx, cy = to_cell(lat, lon)
+                radius = int(400 / CELL)
+                window = terrain[max(cy - radius, 0):cy + radius,
+                                 max(cx - radius, 0):cx + radius]
+                usable = window[window > -9000]
+                top = float(usable.max()) if usable.size else landmark["height"]
+                out.append((lat, lon, max(top, landmark["height"] * 0.5)))
+            return out
         lx, ly = to_cell(landmark["lat"], landmark["lon"])
         base = sample(terrain, lx, ly)
-        if landmark["on_ground"]:
+        if landmark.get("on_ground"):
             top = (base if base > -9000 else 30.0) + landmark["height"]
         else:
             top = landmark["height"]
+        return [(landmark["lat"], landmark["lon"], top)]
+
+    result = {}
+    for key, landmark in LANDMARKS.items():
+        spots = targets_of(landmark)
+        cells = [(*to_cell(lat, lon), top) for lat, lon, top in spots]
 
         seen = {}
         for pair, (lat, lon) in points.items():
@@ -206,10 +288,18 @@ def main() -> None:
             ground = sample(terrain, px, py)
             if ground <= -9000:
                 continue
-            seen[pair] = visible(grid, (px, py, ground + EYE), (lx, ly, top))
+            eye = (px, py, ground + EYE)
+            hits = [i for i, (tx, ty, tz) in enumerate(cells)
+                    if visible(grid, eye, (tx, ty, tz))]
+            if landmark["kind"] == "range":
+                # 見えた尾根上の点の番号。空なら見えない
+                seen[pair] = hits
+            else:
+                seen[pair] = bool(hits)
         result[key] = seen
-        n = sum(seen.values())
-        print(f"{landmark['name']:<10} 頂部 {top:.0f}m  見える {n}/{len(seen)}"
+        n = sum(1 for v in seen.values() if v)
+        top_text = f"{cells[0][2]:.0f}m" if len(cells) == 1 else f"尾根{len(cells)}点"
+        print(f"{landmark['name']:<10} {top_text:<10} 見える {n}/{len(seen)}"
               f"（{n / max(len(seen), 1):.0%}）")
 
     out = OSM_DIR / "viewshed.json"
