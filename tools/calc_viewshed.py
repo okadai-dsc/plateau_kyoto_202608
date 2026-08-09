@@ -38,6 +38,14 @@ BLDG_LON0, BLDG_LON1 = 135.660, 135.850
 
 CELL = 5.0                      # グリッドの一辺(m)
 EYE = 1.5                       # 歩行者の目線(m)
+
+# 近くの建物だけ 1m の細かい格子で持つ。
+# 5m だと幅4〜5mの通りが両側の建物で埋まり、見通しが消えてしまう
+# （堺町通のストリートビューで確認。実際は数百m先まで抜けている）。
+# 遠くの地形は粗くてよいので、近=1m / 遠=5m の2段構えにする。
+FINE_CELL = 1.0
+FINE_LAT0, FINE_LAT1 = 34.968, 35.054
+FINE_LON0, FINE_LON1 = 135.724, 135.783
 GSI_DEM = ROOT / "data" / "gsi" / "dem"
 GSI_ZOOM = 14
 
@@ -58,6 +66,8 @@ RANGE_SAMPLES = 21
 
 NX = int((LON1 - LON0) * M_PER_LON / CELL)
 NY = int((LAT1 - LAT0) * M_PER_LAT / CELL)
+FNX = int((FINE_LON1 - FINE_LON0) * M_PER_LON / FINE_CELL)
+FNY = int((FINE_LAT1 - FINE_LAT0) * M_PER_LAT / FINE_CELL)
 
 POSLIST = re.compile(r"<gml:posList[^>]*>([^<]+)</gml:posList>")
 HEIGHT = re.compile(r"<bldg:measuredHeight[^>]*>([\d.]+)</bldg:measuredHeight>")
@@ -190,32 +200,103 @@ def burn_buildings(grid):
         print(f"  [{index}/{len(files)}] {path.name}  頂点 {len(lats):,}", flush=True)
 
 
+def to_fine_cell(lat, lon):
+    return (
+        int((lon - FINE_LON0) * M_PER_LON / FINE_CELL),
+        int((lat - FINE_LAT0) * M_PER_LAT / FINE_CELL),
+    )
+
+
+def build_fine(terrain):
+    """洛中まわりだけ 1m の地表面グリッドを作る。
+
+    地形は粗いグリッドから引き伸ばす（洛中はほぼ平坦なので十分）。
+    そこに建物を 1m で焼くと、幅4mの通りでも中心3mぶんが空いたまま残る。
+    """
+    print(f"細かいグリッド {FNX} x {FNY}（{FINE_CELL}m 四方、{FNX * FNY / 1e6:.0f}M セル）")
+    ys, xs = np.meshgrid(np.arange(FNY), np.arange(FNX), indexing="ij")
+    lat = FINE_LAT0 + (ys + 0.5) * FINE_CELL / M_PER_LAT
+    lon = FINE_LON0 + (xs + 0.5) * FINE_CELL / M_PER_LON
+    cx = np.clip(((lon - LON0) * M_PER_LON / CELL).astype(np.int32), 0, NX - 1)
+    cy = np.clip(((lat - LAT0) * M_PER_LAT / CELL).astype(np.int32), 0, NY - 1)
+    fine = terrain[cy, cx].copy()
+    del ys, xs, lat, lon, cx, cy
+
+    files = relevant("bldg", (FINE_LAT0, FINE_LAT1, FINE_LON0, FINE_LON1))
+    print(f"建物(1m): {len(files)}ファイル")
+    for index, path in enumerate(files, start=1):
+        text = path.open(encoding="utf-8", errors="replace").read()
+        lats, lons, zs = [], [], []
+        for chunk in POSLIST.finditer(text):
+            values = chunk.group(1).split()
+            for i in range(0, len(values) - 2, 3):
+                lats.append(float(values[i]))
+                lons.append(float(values[i + 1]))
+                zs.append(float(values[i + 2]))
+        if not lats:
+            continue
+        la = np.asarray(lats); lo = np.asarray(lons); z = np.asarray(zs, dtype=np.float32)
+        fx = ((lo - FINE_LON0) * M_PER_LON / FINE_CELL).astype(np.int32)
+        fy = ((la - FINE_LAT0) * M_PER_LAT / FINE_CELL).astype(np.int32)
+        ok = (fx >= 0) & (fx < FNX) & (fy >= 0) & (fy < FNY)
+        if ok.any():
+            np.maximum.at(fine.reshape(-1), fy[ok] * FNX + fx[ok], z[ok])
+        if index % 40 == 0 or index == len(files):
+            print(f"  [{index}/{len(files)}]", flush=True)
+    return fine
+
+
 def sample(grid, x, y):
     if 0 <= x < NX and 0 <= y < NY:
         return grid[y, x]
     return -9999.0
 
 
-def visible(grid, observer, target, step=CELL):
-    """視線が遮られていないか。observer/target は (x, y, z)。"""
-    ox, oy, oz = observer
-    tx, ty, tz = target
-    dx, dy = tx - ox, ty - oy
-    distance = math.hypot(dx, dy)
-    if distance < 1e-6:
+# 視線をたどる刻み。近くは1m（細い通りの見通しを潰さないため）、遠くは5m
+RAY_STEPS = np.concatenate([
+    np.arange(2.0, 400.0, 1.0),
+    np.arange(400.0, 26_000.0, 5.0),
+])
+
+
+def sample_line(coarse, fine, lats, lons):
+    """複数地点の地表面の高さ。細かいグリッドの中ならそちらを優先する。"""
+    out = np.full(lats.shape, -9999.0, dtype=np.float32)
+    inside = ((lats >= FINE_LAT0) & (lats <= FINE_LAT1)
+              & (lons >= FINE_LON0) & (lons <= FINE_LON1))
+    if inside.any():
+        fx = ((lons[inside] - FINE_LON0) * M_PER_LON / FINE_CELL).astype(np.int32)
+        fy = ((lats[inside] - FINE_LAT0) * M_PER_LAT / FINE_CELL).astype(np.int32)
+        np.clip(fx, 0, FNX - 1, out=fx)
+        np.clip(fy, 0, FNY - 1, out=fy)
+        out[inside] = fine[fy, fx]
+    rest = ~inside
+    if rest.any():
+        cx = ((lons[rest] - LON0) * M_PER_LON / CELL).astype(np.int32)
+        cy = ((lats[rest] - LAT0) * M_PER_LAT / CELL).astype(np.int32)
+        ok = (cx >= 0) & (cx < NX) & (cy >= 0) & (cy < NY)
+        values = np.full(cx.shape, -9999.0, dtype=np.float32)
+        values[ok] = coarse[cy[ok], cx[ok]]
+        out[rest] = values
+    return out
+
+
+def visible(coarse, fine, observer, target):
+    """視線が遮られていないか。observer/target は (lat, lon, z)。"""
+    olat, olon, oz = observer
+    tlat, tlon, tz = target
+    dlat, dlon = tlat - olat, tlon - olon
+    distance = math.hypot(dlat * M_PER_LAT, dlon * M_PER_LON)
+    if distance < 2.0:
         return True
-    steps = int(distance / (step / CELL))
-    for i in range(1, steps):
-        t = i / steps
-        x = ox + dx * t
-        y = oy + dy * t
-        surface = sample(grid, int(x), int(y))
-        if surface <= -9000:
-            continue
-        # 出発点と目標を結ぶ直線の、その地点での高さ
-        if surface > oz + (tz - oz) * t + 0.5:      # 0.5m は測量誤差の余裕
-            return False
-    return True
+    steps = RAY_STEPS[RAY_STEPS < distance]
+    if steps.size == 0:
+        return True
+    t = steps / distance
+    surface = sample_line(coarse, fine, olat + dlat * t, olon + dlon * t)
+    # 出発点と目標を結ぶ直線の、その地点での高さ。0.5m は測量誤差の余裕
+    line = oz + (tz - oz) * t + 0.5
+    return not bool(np.any((surface > -9000) & (surface > line)))
 
 
 def main() -> None:
@@ -239,6 +320,14 @@ def main() -> None:
         burn_buildings(grid)
         np.save(terrain_path, terrain)
         np.save(surface_path, grid)
+
+    fine_path = OSM_DIR / "grid_fine.npy"
+    if fine_path.exists() and np.load(fine_path, mmap_mode="r").shape == (FNY, FNX) \
+            and "--rebuild" not in sys.argv:
+        fine = np.load(fine_path)
+    else:
+        fine = build_fine(terrain)
+        np.save(fine_path, fine)
 
     filled = (grid > -9000).sum()
     print(f"\n高さが入ったセル: {filled:,} / {NX * NY:,}（{filled / (NX * NY):.0%}）"
@@ -278,7 +367,6 @@ def main() -> None:
     result = {}
     for key, landmark in LANDMARKS.items():
         spots = targets_of(landmark)
-        cells = [(*to_cell(lat, lon), top) for lat, lon, top in spots]
 
         seen = {}
         for pair, (lat, lon) in points.items():
@@ -288,9 +376,9 @@ def main() -> None:
             ground = sample(terrain, px, py)
             if ground <= -9000:
                 continue
-            eye = (px, py, ground + EYE)
-            hits = [i for i, (tx, ty, tz) in enumerate(cells)
-                    if visible(grid, eye, (tx, ty, tz))]
+            eye = (lat, lon, ground + EYE)
+            hits = [i for i, spot in enumerate(spots)
+                    if visible(grid, fine, eye, spot)]
             if landmark["kind"] == "range":
                 # 見えた尾根上の点の番号。空なら見えない
                 seen[pair] = hits
@@ -298,7 +386,7 @@ def main() -> None:
                 seen[pair] = bool(hits)
         result[key] = seen
         n = sum(1 for v in seen.values() if v)
-        top_text = f"{cells[0][2]:.0f}m" if len(cells) == 1 else f"尾根{len(cells)}点"
+        top_text = f"{spots[0][2]:.0f}m" if len(spots) == 1 else f"尾根{len(spots)}点"
         print(f"{landmark['name']:<10} {top_text:<10} 見える {n}/{len(seen)}"
               f"（{n / max(len(seen), 1):.0%}）")
 

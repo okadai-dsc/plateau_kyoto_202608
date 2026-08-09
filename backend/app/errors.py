@@ -37,3 +37,15 @@ class DestinationResolveError(KyoterError):
 class DestinationOutOfRange(KyoterError):
     def __init__(self) -> None:
         super().__init__("DESTINATION_OUT_OF_RANGE", "Kyoterが案内できる範囲の外です")
+
+
+class SceneNotAvailable(KyoterError):
+    """交差点はあるが線画が無い。
+
+    目印が一点として定まらない（稜線・大きい通りが手がかりの）交差点では
+    線画を作れないため（docs/SPEC.md 2.6）。文章の指示だけで歩いてもらう。
+    """
+
+    def __init__(self) -> None:
+        super().__init__("SCENE_NOT_AVAILABLE",
+                         "この交差点には景色の線画がありません", status_code=404)

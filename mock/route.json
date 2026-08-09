@@ -21,7 +21,13 @@
       "elevation": 3.3,
       "height": 700.0
     },
-    "hint": "北に北山が見えています。そちらが上ルです。"
+    "hint": "北に北山が見えています。そちらが上ルです。",
+    "scene": {
+      "url": "/api/scene/1/12",
+      "landmark": "kitayama",
+      "name": "北山",
+      "azimuth": 357
+    }
   },
   "moves": [
     {

@@ -747,74 +747,29 @@ body.is-intro .app-main {
 
 .route-arrow { color: var(--ink-muted); }
 
-/* 方位帯（docs/SPEC.md 2.6 段階A）。
-   中央が目印＝正面。帯のどこに「上ル」が来るかで回る向きが決まる */
-.skyline {
+/* 目印の方を向いた景色（docs/SPEC.md 2.6 段階C）。
+   PLATEAU の建物を透視投影した線画。色は付けない */
+.scene {
   margin: 0 0 0.75rem;
 }
 
-.skyline-svg {
+.scene-figure {
+  margin: 0;
+}
+
+.scene-image {
   display: block;
   width: 100%;
-  height: auto;                 /* viewBox 360x108 の比率のまま */
+  height: auto;
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  background: var(--surface);
+  background: #fff;
 }
 
-.skyline-sky {
-  fill: var(--accent-soft);
-}
-
-.skyline-horizon {
-  stroke: var(--line);
-  stroke-width: 1.5;
-  vector-effect: non-scaling-stroke;
-}
-
-.skyline-tick {
-  stroke: var(--major-line);
-  stroke-width: 1;
-  vector-effect: non-scaling-stroke;
-}
-
-.skyline-tick.is-up {
-  stroke: var(--accent);
-  stroke-width: 2.5;
-}
-
-.skyline-label,
-.skyline-name,
-.skyline-note {
-  fill: var(--ink-muted);
-  font-size: 11px;
-  text-anchor: middle;
-}
-
-.skyline-label.is-up {
-  fill: var(--accent);
-  font-weight: 700;
-}
-
-.skyline-mark {
-  fill: var(--accent);
-}
-
-/* 連なりは「方角しか分からない」ので、単独峰より控えめに見せる */
-.skyline-mark.is-range {
-  fill: var(--major-line);
-}
-
-.skyline-name {
-  fill: var(--ink);
-  font-weight: 700;
-  font-size: 13px;
-}
-
-.skyline-note {
+.scene-caption {
   margin: 0.35rem 0 0;
   color: var(--ink-muted);
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   text-align: center;
 }
 
